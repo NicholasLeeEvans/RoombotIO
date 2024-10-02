@@ -1,5 +1,4 @@
 #include "Roombot.h"
-//#include <math.h>
 
 Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     int initial_rpm = 10; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
@@ -7,6 +6,10 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     this->location_x = 0;
     this->location_y = 0;
     this->angle = 0.0f;
+
+    //initial step counters
+    this->counter_left = 0;
+    this->counter_right = 0;
 
     //based off prototype, in mm
     this->wheel_base = 120;
@@ -17,11 +20,11 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     this->stepper_right = right;
     
     set_rpm(initial_rpm);
-    //this->stepper_left->set_speed(rpm);
-    //this->stepper_right->set_speed(rpm);
 
     //set up rangefinder
     this->front_range = front;
+
+    this->step_to_angle_ratio = 180.0f * this->wheel_diam / this->wheel_base / stepper_left->get_steps_per_rev();
 }
 
 void Roombot::set_rpm(int rpm){
@@ -38,13 +41,6 @@ void Roombot::turn_angle(float turn_angle){
     
     this->stepper_left->manual_steps(-steps_needed);
     this->stepper_right->manual_steps(steps_needed);
-
-    //TODO: need a way to see how much it actually turned if it gets interrupted. but until then...
-    this->angle += turn_angle;
-    Serial.print("Rotating to: ");
-    Serial.print(this->angle);
-    Serial.println("deg");
-    
     
 }
 
@@ -75,4 +71,43 @@ void Roombot::move_forward(int distance){
     Serial.print(this->location_y);
     Serial.println(")");  
          
+}
+
+void Roombot::increment_step_count(int _step, int _side){
+    if(_side == -1){
+        this->counter_left += _step;
+        
+    }else{
+        this->counter_right += _step;
+    }
+    //no floating point calcs in an interrupt!!
+
+}
+
+void Roombot::spin_and_scan(){
+    //set the turn angle to 360, and start reading the rangefinder
+    //need a variable to store the values somewhere...
+    spin_once(1);
+
+}
+
+/*
+int* Roombot::get_position(){
+    int position[2];
+    position[0] = this->location_x;
+    position[1] = this->location_y;
+    return position;
+}
+*/
+
+void Roombot::update_position(){
+    //noInterrupts();
+    int delta_steps = (this->counter_right - this->counter_left); // might be fine without disabling interrupts
+    this->angle = fmod(this->step_to_angle_ratio * delta_steps, 360.0);
+
+    //interrupts();
+    //Serial.print("delta steps:");
+    //Serial.println(delta_steps);
+    
+    //need to figure out how to do the linear stuff next maybe save the last checked steps
 }

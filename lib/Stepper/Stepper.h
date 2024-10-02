@@ -7,14 +7,15 @@ class Stepper {
 public:
     Stepper(int _steps_per_rev, int _pin1, int _pin2, int _pin3, int _pin4);
     void set_timer(int timer_number, void (*isr)());
+
     void setup_pins();
     void set_speed(int _rpm);
-    void step_once();
-    void update_stepper();
+    int step_once();
+    //void update_stepper();
     void manual_steps(int steps);
     int get_steps_remaining(){return this->steps_remaining;};
     int get_steps_per_rev(){return this->steps_per_rev;};
-    long int get_step_interval_us(){return this->step_interval_us;};
+    unsigned int get_step_interval_us(){return this->step_interval_us;};
     
 private:
     int motor_pin1; //blue
@@ -22,10 +23,9 @@ private:
     int motor_pin3; //yellow
     int motor_pin4; //orange
     int steps_per_rev;
-    int speed_rpm; //i think this can only be like 20rpm based on the specs of the 28BY48-W01
+    int speed_rpm;
     int steps_remaining; // will need to sort this out for continuous mode
-    //long int last_step_us; // this can be fixed using the timer interrupt value i think
-    long int step_interval_us;
+    unsigned int step_interval_us;
     int current_state;
     int direction; // ccw = 1, cw = -1 (ccw is given in datasheet)
     hw_timer_t *Timer_cfg;
