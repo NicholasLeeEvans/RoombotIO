@@ -15,6 +15,7 @@ Stepper stepper_right(4096,26,25,33,32);
 
 Roombot my_roombot(&stepper_left, &stepper_right, &range_front);
 
+//would like to remove these and put in the class somehow... maybe reference the timer with a 1 and 2 in the roombot class and do it there?
 void IRAM_ATTR Timer1_ISR()
 {
   stepper_left.update_stepper();
@@ -30,14 +31,19 @@ BluetoothSerial SerialBT;
 
 void setup() {
 
+  Serial.begin(115200);
+  Serial.println("serial started");
+  delay(10);
+
   stepper_left.set_timer(1, Timer1_ISR);
   stepper_right.set_timer(2, Timer2_ISR);
-  Serial.begin(115200);
+  delay(10);
+
   SerialBT.begin(device_name);
-
-  Serial.println("serial started");
-
-  my_roombot.set_rpm(10);
+  delay(10);
+  
+  my_roombot.set_rpm(10); // this will msg twice, once for each stepper
+  delay(10);
 }
 
 void check_BT_commands();
@@ -47,41 +53,50 @@ void loop() {
   check_BT_commands();
 }
 
+
 void check_BT_commands(){
   if (SerialBT.available()) {
     char message = (SerialBT.read());
+    Serial.print("received: ");
+    Serial.println(message);
+    int new_rpm;
     switch(message){
       case 'w':
-        SerialBT.println("moving forward");
-        Serial.print("received: ");
-        Serial.println(message);
+        Serial.println("moving forward");
         my_roombot.move_forward(100);
         break;
       case 's':
-        SerialBT.println("moving backward");
-        Serial.print("received: ");
-        Serial.println(message);
+        Serial.println("moving backward");
         my_roombot.move_forward(-100);
         break;
       case 'a':
-        SerialBT.println("turning left");
-        Serial.print("received: ");
-        Serial.println(message);
+        Serial.println("turning left");
         my_roombot.turn_angle(45);
         break;
       case 'd':
-        SerialBT.println("turning right");
-        Serial.print("received: ");
-        Serial.println(message);
+        Serial.println("turning right");
         my_roombot.turn_angle(-45);
         break;
+      case 'j':
+        Serial.print("speeding up to: ");
+        new_rpm = min(my_roombot.get_rpm() + 2,16);
+        Serial.print(new_rpm);
+        Serial.println("rpm");
+        my_roombot.set_rpm(min(my_roombot.get_rpm() + 2,20));
+        break;
+      case 'k':
+        Serial.print("slowing down to: ");
+        new_rpm = max(my_roombot.get_rpm() - 2,2);
+        Serial.print(new_rpm);
+        Serial.println("rpm");
+        my_roombot.set_rpm(max(my_roombot.get_rpm() - 2,2));
+        break;
       default:
-        Serial.println("unknown message received.");
-        Serial.print("received: ");
-        Serial.println(message);
+        Serial.println("unknown message received :(");
         break;  
     }
 
   }
   delay(20);
 }
+

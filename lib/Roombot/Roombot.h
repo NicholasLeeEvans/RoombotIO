@@ -9,6 +9,7 @@ class Roombot {
     public:
         Roombot(Stepper *left, Stepper *right, RangeFinder *front);
         void set_rpm(int rpm);
+        int get_rpm(){return this->rpm;};
         
         void turn_angle(float angle);
         

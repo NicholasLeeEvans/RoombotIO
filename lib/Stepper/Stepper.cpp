@@ -2,6 +2,7 @@
 
 Stepper::Stepper(int _steps_per_rev, int _pin1, int _pin2, int _pin3, int _pin4)
     {
+      this->Timer_cfg = NULL;
       int initial_rpm = 10;
       this->steps_per_rev = _steps_per_rev;
       this->motor_pin1 = _pin1;
@@ -13,20 +14,23 @@ Stepper::Stepper(int _steps_per_rev, int _pin1, int _pin2, int _pin3, int _pin4)
       this->direction = 1;
       setup_pins(); //sort out pinMode
       set_speed(initial_rpm);
-      last_step_us = micros();
       drive_pins(0); //start with nothing
-      this->Timer_cfg = NULL;
+      
     }
 
 void Stepper::set_timer(int timer_number, void (*isr)())
 {
-  Timer_cfg = timerBegin(timer_number, 80, true);
+  //set the timer to 1Mhz
+  //might need to make sure this equates to 1Mhz because all of the interrupt timing is based on that
+  Timer_cfg = timerBegin(timer_number, 80, true); 
   timerAttachInterrupt(Timer_cfg, isr, true);
-  timerAlarmWrite(Timer_cfg, 500, true);
-  //timerAlarmWrite(Timer_cfg, this->step_interval_us, true); //for variable interrupt timing
+  //timerAlarmWrite(Timer_cfg, 500, true);
+  timerAlarmWrite(Timer_cfg, this->step_interval_us, true); //for variable interrupt timing
   timerAlarmEnable(Timer_cfg);
-  
 
+  //Serial.println("disabling stepper in set_timer");
+  //timerAlarmDisable(Timer_cfg); //start with the timer disabled until required
+  
 }
 
 void Stepper::step_once()
@@ -43,27 +47,34 @@ void Stepper::step_once()
 void Stepper::update_stepper()
     {
       /*
-      change this to variable interrupt timing:
-      use the rpm to set the interval time of the interrupt.
-      when there are steps added, make sure the timer is enabled
-      when the steps run out, can disable the interrupt
-      this way the interrupt will only fire when needed
+      this function is called via hw timer interrupt
+      will loop stepping once, then disable the interrupt timer when it is finished
+      the timer is re-enabled when needed in the manual_steps function
 
       */
-      long int now = micros(); //this would be removed
-      if((steps_remaining > 0) && ((last_step_us + step_interval_us) < now)){ //second half of this would be removed
-
+      
+      if((steps_remaining > 0)){ 
         step_once();
-        last_step_us = now;
-      } //add an else clause: switch off the interrupt
-      //else: timerAlarmDisable(Timer_cfg);
+      } else{
+        //timerAlarmDisable(Timer_cfg);
+        //Serial.println("disabling stepper in update_stepper");
+      } 
 
     }
 
 void Stepper::manual_steps(int steps)
 {
-  //check if there were no steps before, and re-enable the interrupt if need be.
-  //timerAlarmEnable(Timer_cfg);
+  //should probably think about the case where steps == 0
+  /*
+  if(this->steps_remaining <= 0){
+    //if the previous steps_remaining was 0, then the timer would have been disabled
+    Serial.println("enabling stepper in manual steps");
+    timerAlarmWrite(Timer_cfg, step_interval_us, true);
+    timerAlarmEnable(Timer_cfg);
+  }
+  */
+  
+  
   direction = 1;
   if(steps < 0){
     steps = abs(steps);
@@ -129,12 +140,14 @@ void Stepper::drive_pins(int _state)
 void Stepper::set_speed(int _rpm){
     //should check for limit here... max 20, min -20? if negative then set the interval as abs(rpm) and set direction -ve
     this->speed_rpm = _rpm;
-
-    // steps/min = speed_rpm * steps_per_rev
-    // steps/sec = (steps_per_rev * speed_rpm) / 60
-    // millis / step = millis / sec * inv(steps/sec) = 1000 / steps/sec = (1000 * 60) / (steps_per_rev * speed_rpm)
     this->step_interval_us = (60L * 1000L * 1000L) / steps_per_rev / speed_rpm;
 
     //update to variable interrupt timing:
-    //timerAlarmWrite(Timer1_cfg, step_interval_us, true);
+    if(Timer_cfg != NULL){
+      //timerAlarmWrite(Timer_cfg, 500, true);
+      Serial.print("setting alarm write to: ");
+      Serial.println(step_interval_us);
+      
+      timerAlarmWrite(Timer_cfg, step_interval_us, true);
+    }
 }

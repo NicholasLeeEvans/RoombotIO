@@ -2,7 +2,7 @@
 //#include <math.h>
 
 Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
-    int initial_rpm = 10;
+    int initial_rpm = 10; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
     // set up initial location
     this->location_x = 0;
     this->location_y = 0;
@@ -45,6 +45,7 @@ void Roombot::turn_angle(float turn_angle){
     Serial.print(this->angle);
     Serial.println("deg");
     
+    
 }
 
 void Roombot::spin_once(int direction){
@@ -58,7 +59,7 @@ void Roombot::move_forward(int distance){
     float wheel_circumference = 3.14 * wheel_diam; //about 180
     float wheel_rotations = distance / wheel_circumference;
     int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
-    
+    Serial.println(steps_needed);
     this->stepper_left->manual_steps(steps_needed);
     this->stepper_right->manual_steps(steps_needed);
 
@@ -72,8 +73,6 @@ void Roombot::move_forward(int distance){
     Serial.print(this->location_x);
     Serial.print(", ");
     Serial.print(this->location_y);
-    Serial.println(")");
-    
-    
-     
+    Serial.println(")");  
+         
 }
