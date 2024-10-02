@@ -1,0 +1,20 @@
+#include "BluetoothSerial.h"
+
+String device_name = "ESP32-BT-Slave";
+
+BluetoothSerial SerialBT;
+
+void setup() {
+  Serial.begin(115200);
+  SerialBT.begin(device_name); //Bluetooth device name
+}
+
+void loop() {
+  if (Serial.available()) {
+    SerialBT.write(Serial.read());
+  }
+  if (SerialBT.available()) {
+    Serial.write(SerialBT.read());
+  }
+  delay(20);
+}
