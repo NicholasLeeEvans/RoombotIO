@@ -105,8 +105,13 @@ void check_BT_commands(){
   }
 
   my_roombot.update_position();
-  //Serial.print("current angle: ");
-  //Serial.println(my_roombot.get_angle());
-  delay(50);
+  Serial.print("current position(x,y): (");
+  Serial.print(int(my_roombot.get_position_x()));
+  Serial.print(",");
+  Serial.print(int(my_roombot.get_position_y()));
+  Serial.print(") ");
+  Serial.print("current angle: ");
+  Serial.println(my_roombot.get_angle());
+  delay(100);
 }
 

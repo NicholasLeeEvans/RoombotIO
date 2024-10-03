@@ -27,7 +27,10 @@ class Roombot {
         void spin_and_scan();
 
         float get_angle(){return this->angle;};
-        //int* get_position();
+        float get_position_x(){return this->location_x;};
+        float get_position_y(){return this->location_y;};
+        
+
         float get_step_to_angle_ratio(){return this->step_to_angle_ratio;};
         
         void update_position();
@@ -43,14 +46,18 @@ class Roombot {
         
         int wheel_base;
         int wheel_diam;
+        int wheel_circumference;
 
         //step counters
         int counter_left;
         int counter_right;
+
+        int last_left;
+        int last_right;
         
         //coordinate system, x and y in mm, angle where it would be pointing.
-        int location_x;
-        int location_y;
+        float location_x;
+        float location_y;
         float angle;
         float step_to_angle_ratio;
 
