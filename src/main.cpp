@@ -50,15 +50,6 @@ void setup() {
   //Serial.println(my_roombot.get_step_to_angle_ratio());
   my_roombot.set_rpm(10); // this will msg twice, once for each stepper
   delay(10);
-
-  Serial.println("test interpolator... with values 500,525,145,155,4000,4200");
-  Serial.println(my_roombot.interpolate_value(500));
-  Serial.println(my_roombot.interpolate_value(525));
-  Serial.println(my_roombot.interpolate_value(145));
-  Serial.println(my_roombot.interpolate_value(4000));
-  Serial.println(my_roombot.interpolate_value(4200));
-  Serial.println("interpolation over...");
-  delay(10);
 }
 
 void check_BT_commands();
@@ -110,6 +101,10 @@ void check_BT_commands(){
         Serial.println("spin and scan: ");
         my_roombot.spin_and_scan();
         break;
+      case 'x':
+        Serial.println("one scan: ");
+        my_roombot.scan_once();
+        break;
       default:
         Serial.println("unknown message received :(");
         break;  
@@ -118,16 +113,7 @@ void check_BT_commands(){
   }
 
   my_roombot.update_position();
-  /*
-  Serial.print("current position(x,y): (");
-  Serial.print(int(my_roombot.get_position_x()));
-  Serial.print(",");
-  Serial.print(int(my_roombot.get_position_y()));
-  Serial.print(") ");
-  Serial.print("current angle: ");
-  Serial.println(my_roombot.get_angle());
-  */
-  
+
   delay(50);
 }
 

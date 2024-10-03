@@ -1,5 +1,7 @@
 #include "Roombot.h"
 
+#define PI_OVER_180 0.01745329
+
 Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     int initial_rpm = 10; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
     // set up initial location
@@ -58,7 +60,6 @@ void Roombot::spin_once(int direction){
 
 //distance is in mm, should automatically take care of negative numbers
 void Roombot::move_forward(int distance){
-    //float wheel_circumference = 3.14 * wheel_diam; //about 180, as object variable now
     float wheel_rotations = float(distance) / this->wheel_circumference;
     int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
     Serial.println(steps_needed);
@@ -75,22 +76,32 @@ void Roombot::increment_step_count(int _step, int _side){
     }
 }
 
+int Roombot::scan_once(){
+    int scan_value = this->front_range->get_range();
+    Serial.print("raw val: ");
+    Serial.print(scan_value);
+    int guess_mm = this->my_interpolator.calculate_distance(scan_value);
+    Serial.print(", estimated distance: ");
+    Serial.println(guess_mm);
+
+    //estimate the position of the scan
+    int range_x = this->location_x + (guess_mm * cos(this->angle * PI_OVER_180));
+    int range_y = this->location_y + (guess_mm * sin(this->angle * PI_OVER_180));
+
+    return scan_value;
+}
+
 void Roombot::spin_and_scan(){
     //set the turn angle to 360, and start reading the rangefinder
     //need a variable to store the values somewhere...
     spin_once(1);
     delay(5);
     while((this->stepper_left->get_steps_remaining() > 0) || (this->stepper_left->get_steps_remaining() > 0)){
-        Serial.print("range val: ");
-        Serial.println(this->front_range->get_range());
+        this->update_position();
+        this->scan_once();
         delay(50);
     }
-    
-    /*
-    TODO: set the scanner to do one every 50ms or something, just make it blocking for now :)
-    can update the position from here, and use that location/angle info to see where the detected point would be
-    TODO: calibration of the range finder
-    */
+
 }
 
 void Roombot::update_position(){
@@ -118,8 +129,8 @@ void Roombot::update_position(){
     int new_linear_steps = (new_left_steps + new_right_steps) / 2;
     float distance_travelled = new_linear_steps * (float(this->wheel_circumference) / stepper_left->get_steps_per_rev());
 
-    float d_x = distance_travelled * cos(this->angle * 3.14 / 180);
-    float d_y = distance_travelled * sin(this->angle * 3.14 / 180);
+    float d_x = distance_travelled * cos(this->angle * PI_OVER_180);
+    float d_y = distance_travelled * sin(this->angle * PI_OVER_180);
 
     this->location_x += d_x;
     this->location_y += d_y;

@@ -25,6 +25,7 @@ class Roombot {
 
         void increment_step_count(int _step, int _side);
 
+        int scan_once();
         void spin_and_scan();
 
         float get_angle(){return this->angle;};
