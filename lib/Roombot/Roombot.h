@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "Stepper.h"
 #include "RangeFinder.h"
+#include "LinearInterpolator.h"
 
 class Roombot {
     public:
@@ -34,6 +35,8 @@ class Roombot {
         float get_step_to_angle_ratio(){return this->step_to_angle_ratio;};
         
         void update_position();
+
+        int interpolate_value(int value){return my_interpolator.calculate_distance(value);};
         
         
     private:
@@ -43,6 +46,8 @@ class Roombot {
         RangeFinder *front_range;
         //RangeFinder *left_range;
         //RangeFinder *right_range;
+
+        LinearInterpolator my_interpolator;
         
         int wheel_base;
         int wheel_diam;

@@ -28,6 +28,8 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     //set up rangefinder
     this->front_range = front;
 
+    this->my_interpolator = LinearInterpolator();
+
     this->step_to_angle_ratio = 180.0f * this->wheel_diam / this->wheel_base / stepper_left->get_steps_per_rev();
 }
 
@@ -77,6 +79,18 @@ void Roombot::spin_and_scan(){
     //set the turn angle to 360, and start reading the rangefinder
     //need a variable to store the values somewhere...
     spin_once(1);
+    delay(5);
+    while((this->stepper_left->get_steps_remaining() > 0) || (this->stepper_left->get_steps_remaining() > 0)){
+        Serial.print("range val: ");
+        Serial.println(this->front_range->get_range());
+        delay(50);
+    }
+    
+    /*
+    TODO: set the scanner to do one every 50ms or something, just make it blocking for now :)
+    can update the position from here, and use that location/angle info to see where the detected point would be
+    TODO: calibration of the range finder
+    */
 }
 
 void Roombot::update_position(){
@@ -109,19 +123,5 @@ void Roombot::update_position(){
 
     this->location_x += d_x;
     this->location_y += d_y;
-
-    /*
-    TODO: probably need to add the step counts together and half it to get the linear distance moved
-    would be safe to assume it has been one smooth motion...
-    actually need to remember the last linear_distance value and subtract it as this would be the total...
-    int linear_distance = (this->counter_left + this->counter_right) / 2;
-    int d_x = linear_distance * cos(this->angle * 3.14 / 180);
-    int d_y = linear_distance * sin(this->angle * 3.14 / 180);
-
-    */
-    //need to figure out how to do the linear stuff next maybe save the last checked steps
-
-    
-
 
 }
