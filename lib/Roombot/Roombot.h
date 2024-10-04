@@ -5,6 +5,7 @@
 #include "Stepper.h"
 #include "RangeFinder.h"
 #include "LinearInterpolator.h"
+#include "BluetoothSerial.h"
 
 class Roombot {
     private:
@@ -15,6 +16,8 @@ class Roombot {
         int front_range_offset;
         //RangeFinder *left_range;
         //RangeFinder *right_range;
+
+        BluetoothSerial SerialBT;
 
         LinearInterpolator my_interpolator;
         
@@ -39,6 +42,7 @@ class Roombot {
 
     public:
         Roombot(Stepper *left, Stepper *right, RangeFinder *front);
+        void init_serialBT();
         void reset_x_y_angle();
         void set_rpm(int rpm);
         int get_rpm(){return this->rpm;};
@@ -70,6 +74,8 @@ class Roombot {
         void update_position();
 
         int interpolate_value(int value){return my_interpolator.calculate_distance(value);};
+
+        void checkBTcommands();
         
 }; 
 

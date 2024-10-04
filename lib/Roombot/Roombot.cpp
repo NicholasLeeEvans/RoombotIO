@@ -3,6 +3,8 @@
 #define PI_OVER_180 0.01745329
 
 Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
+    
+    
     int initial_rpm = 10; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
     // set up initial location
     this->reset_x_y_angle();
@@ -12,7 +14,6 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     this->counter_right = 0;
     this->last_left = 0;
     this->last_right = 0;
-    
 
     //based off prototype, in mm
     this->wheel_base = 120;
@@ -32,6 +33,13 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     this->my_interpolator = LinearInterpolator();
 
     this->step_to_angle_ratio = 180.0f * this->wheel_diam / this->wheel_base / stepper_left->get_steps_per_rev();
+    
+    
+    delay(10);
+}
+
+void Roombot::init_serialBT(){
+    this->SerialBT.begin("Roombot");
 }
 
 void Roombot::reset_x_y_angle(){
@@ -83,21 +91,28 @@ void Roombot::increment_step_count(int _step, int _side){
 
 int Roombot::scan_once(){
     int scan_value = this->front_range->get_range();
-    Serial.print("raw val: ");
-    Serial.print(scan_value);
+    //Serial.print("raw val: ");
+    //Serial.print(scan_value);
     int guess_mm = this->my_interpolator.calculate_distance(scan_value);
-    Serial.print(", estimated distance: ");
-    Serial.print(guess_mm);
+    //Serial.print(", estimated distance: ");
+    //Serial.print(guess_mm);
 
     //estimate the position of the scan, add the offset from center to range finder. other will need to have angle offset
-    int range_x = this->location_x + (this->front_range_offset + guess_mm * cos(this->angle * PI_OVER_180));
-    int range_y = this->location_y + (this->front_range_offset + guess_mm * sin(this->angle * PI_OVER_180));
+    int range_x = this->location_x + ((this->front_range_offset + guess_mm) * cos(this->angle * PI_OVER_180));
+    int range_y = this->location_y + ((this->front_range_offset + guess_mm) * sin(this->angle * PI_OVER_180));
 
-    Serial.print(", (x, y): (");
-    Serial.print(range_x);
-    Serial.print(", ");
-    Serial.print(range_y);
-    Serial.println(")");
+    /*
+    SerialBT.print("(x, y): (");
+    SerialBT.print(range_x);
+    SerialBT.print(", ");
+    SerialBT.print(range_y);
+    SerialBT.println(")");
+    */
+    SerialBT.print(range_x);
+    SerialBT.print(",");
+    SerialBT.println(range_y);
+    
+    
 
     return scan_value;
 }
@@ -107,20 +122,23 @@ void Roombot::spin_and_scan(){
     //need a variable to store the values somewhere...
     spin_once(1);
     delay(5);
+    int old_rpm = this->get_rpm();
+    this->set_rpm(5);
     while((this->stepper_left->get_steps_remaining() > 0) || (this->stepper_left->get_steps_remaining() > 0)){
         this->update_position();
         this->scan_once();
-        delay(50);
+        delay(100);
     }
+    this->set_rpm(old_rpm);
 }
 
 void Roombot::print_location_angle(){
-    Serial.print("(x, y): (");
-    Serial.print(int(this->get_position_x()));
-    Serial.print(", ");
-    Serial.print(int(this->get_position_y()));
-    Serial.print("), angle: ");
-    Serial.println(int(this->get_angle()));
+    SerialBT.print("(x, y): (");
+    SerialBT.print(int(this->get_position_x()));
+    SerialBT.print(", ");
+    SerialBT.print(int(this->get_position_y()));
+    SerialBT.print("), angle: ");
+    SerialBT.println(int(this->get_angle()));
 }
 
 void Roombot::update_position(){
@@ -155,3 +173,65 @@ void Roombot::update_position(){
     this->location_y += d_y;
 
 }
+
+void Roombot::checkBTcommands(){
+    if (this->SerialBT.available()) {
+    char message = (SerialBT.read());
+    //Serial.print("received: ");
+    //Serial.println(message);
+    int new_rpm;
+    switch(message){
+      case 'w':
+        //Serial.println("moving forward");
+        this->move_forward(100);
+        break;
+      case 's':
+        //Serial.println("moving backward");
+        this->move_forward(-100);
+        break;
+      case 'a':
+        //Serial.println("turning left");
+        this->turn_angle(45);
+        break;
+      case 'd':
+        //Serial.println("turning right");
+        this->turn_angle(-45);
+        break;
+      case 'j':
+        //Serial.print("speeding up to: ");
+        new_rpm = min(this->get_rpm() + 2,16);
+        //Serial.print(new_rpm);
+        //Serial.println("rpm");
+        this->set_rpm(new_rpm);
+        break;
+      case 'k':
+        //Serial.print("slowing down to: ");
+        new_rpm = max(this->get_rpm() - 2,2);
+        //Serial.print(new_rpm);
+        //Serial.println("rpm");
+        this->set_rpm(new_rpm);
+        break;
+      case 'z':
+        //Serial.println("spin and scan: ");
+        this->spin_and_scan();
+        break;
+      case 'x':
+        //Serial.println("one scan: ");
+        this->scan_once();
+        break;
+      case 'c':
+        //Serial.println("resetting x,y coords and angle: ");
+        this->reset_x_y_angle();
+        break;
+      case 'e':
+        this->print_location_angle();
+        break;
+      default:
+        //Serial.println("unknown message received :(");
+        break;  
+    } //end switch
+  } //end if serialBT available
+
+}
+
+  
