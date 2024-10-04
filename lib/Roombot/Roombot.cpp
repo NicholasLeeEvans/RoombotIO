@@ -5,9 +5,7 @@
 Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     int initial_rpm = 10; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
     // set up initial location
-    this->location_x = 0;
-    this->location_y = 0;
-    this->angle = 0.0f;
+    this->reset_x_y_angle();
 
     //initial step counters
     this->counter_left = 0;
@@ -29,10 +27,17 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
 
     //set up rangefinder
     this->front_range = front;
+    this->front_range_offset = 70;
 
     this->my_interpolator = LinearInterpolator();
 
     this->step_to_angle_ratio = 180.0f * this->wheel_diam / this->wheel_base / stepper_left->get_steps_per_rev();
+}
+
+void Roombot::reset_x_y_angle(){
+    this->location_x = 0;
+    this->location_y = 0;
+    this->angle = 0.0f;
 }
 
 void Roombot::set_rpm(int rpm){
@@ -82,11 +87,17 @@ int Roombot::scan_once(){
     Serial.print(scan_value);
     int guess_mm = this->my_interpolator.calculate_distance(scan_value);
     Serial.print(", estimated distance: ");
-    Serial.println(guess_mm);
+    Serial.print(guess_mm);
 
-    //estimate the position of the scan
-    int range_x = this->location_x + (guess_mm * cos(this->angle * PI_OVER_180));
-    int range_y = this->location_y + (guess_mm * sin(this->angle * PI_OVER_180));
+    //estimate the position of the scan, add the offset from center to range finder. other will need to have angle offset
+    int range_x = this->location_x + (this->front_range_offset + guess_mm * cos(this->angle * PI_OVER_180));
+    int range_y = this->location_y + (this->front_range_offset + guess_mm * sin(this->angle * PI_OVER_180));
+
+    Serial.print(", (x, y): (");
+    Serial.print(range_x);
+    Serial.print(", ");
+    Serial.print(range_y);
+    Serial.println(")");
 
     return scan_value;
 }
@@ -101,7 +112,15 @@ void Roombot::spin_and_scan(){
         this->scan_once();
         delay(50);
     }
+}
 
+void Roombot::print_location_angle(){
+    Serial.print("(x, y): (");
+    Serial.print(int(this->get_position_x()));
+    Serial.print(", ");
+    Serial.print(int(this->get_position_y()));
+    Serial.print("), angle: ");
+    Serial.println(int(this->get_angle()));
 }
 
 void Roombot::update_position(){

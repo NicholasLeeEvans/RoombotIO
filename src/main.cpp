@@ -105,6 +105,13 @@ void check_BT_commands(){
         Serial.println("one scan: ");
         my_roombot.scan_once();
         break;
+      case 'c':
+        Serial.println("resetting x,y coords and angle: ");
+        my_roombot.reset_x_y_angle();
+        break;
+      case 'e':
+        my_roombot.print_location_angle();
+        break;
       default:
         Serial.println("unknown message received :(");
         break;  
