@@ -33,28 +33,25 @@ void Stepper::set_timer(int timer_number, void (*isr)()){
 
 int Stepper::step_once(){
   if((steps_remaining <= 0)){ 
-      return 0;
-    } else {
-      current_state += direction;
-      if(current_state > 8)
-        current_state = 1;
-      else if(current_state < 1)
-        current_state = 8;
-      drive_pins(current_state);
-      
-      --steps_remaining;
-      return direction; //return one step in whichever direction, this will be consumed by roombot inc steps
-    }
+    drive_pins(0); //if there are no steps left
+    return 0;
+  } else {
+    current_state += direction;
+    if(current_state > 8)
+      current_state = 1;
+    else if(current_state < 1)
+      current_state = 8;
+    drive_pins(current_state);
+    
+    --steps_remaining;
+    return direction; //return one step in whichever direction, this will be consumed by roombot inc steps
+  }
   
 }
 
 void Stepper::manual_steps(int steps){
-  direction = 1;
-  if(steps < 0){
-    steps = abs(steps);
-    direction = -1;
-  }
-  this->steps_remaining = steps;
+  this->direction = ((0 <= steps) - (steps < 0)); // direction -1 if steps < 0, otherwise 1
+  this->steps_remaining = abs(steps);
 }
 
 void Stepper::setup_pins(){
