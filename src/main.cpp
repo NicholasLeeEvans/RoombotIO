@@ -17,13 +17,11 @@ Roombot my_roombot(&stepper_left, &stepper_right, &range_front);
 //would like to remove these and put in the class somehow... maybe reference the timer with a 1 and 2 in the roombot class and do it there?
 void IRAM_ATTR Timer_ISR_Left()
 {
-  //stepper_left.step_once();
   my_roombot.increment_step_count(stepper_left.step_once(),-1); //this feels a bit convoluted, might be better just to split it
 }
 
 void IRAM_ATTR Timer_ISR_Right()
 {
-  //stepper_right.step_once();
   my_roombot.increment_step_count(stepper_right.step_once(),1);
 }
 
@@ -43,11 +41,8 @@ void setup() {
 
   Serial.println("starting serialBT");
   my_roombot.init_serialBT();
-  //SerialBT.begin(device_name);
   delay(10);
-  //Serial.print("step to angle ratio:");
-  //Serial.println(my_roombot.get_step_to_angle_ratio());
-  my_roombot.set_rpm(10); // this will msg twice, once for each stepper
+  my_roombot.set_rpm(10); 
   delay(10);
   Serial.println("entering loop: ");
 }

@@ -29,6 +29,8 @@ private:
     volatile int current_state;
     int direction; // ccw = 1, cw = -1 (ccw is given in datasheet)
     hw_timer_t *Timer_cfg;
+    volatile bool driving;
+    int minimum_interval = 915;
 
     void write_pins(int motor_state_1,int motor_state_2,int motor_state_3,int motor_state_4);
     void drive_pins(int _state);

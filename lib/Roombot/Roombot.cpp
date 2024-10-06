@@ -6,7 +6,7 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     
     
     int initial_rpm = 10; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
-    this->rpm_limit = 15;
+    this->rpm_limit = 16;
     // set up initial location
     this->reset_x_y_angle();
 
