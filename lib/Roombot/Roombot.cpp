@@ -6,6 +6,7 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     
     
     int initial_rpm = 10; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
+    this->rpm_limit = 15;
     // set up initial location
     this->reset_x_y_angle();
 
@@ -49,9 +50,14 @@ void Roombot::reset_x_y_angle(){
 }
 
 void Roombot::set_rpm(int rpm){
+  if(rpm > this->rpm_limit){
+    rpm = this->rpm_limit;
+  } else if(rpm < 1){
+    rpm = 1;
+  }
     this->rpm = rpm;
-    this->stepper_left->set_speed(rpm);
-    this->stepper_right->set_speed(rpm);
+    this->stepper_left->set_rpm(rpm);
+    this->stepper_right->set_rpm(rpm);
 }
 
 //positive angle is left turn

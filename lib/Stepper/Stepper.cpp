@@ -12,28 +12,31 @@ Stepper::Stepper(int _steps_per_rev, int _pin1, int _pin2, int _pin3, int _pin4)
       this->current_state = 0; //all off
       this->direction = 1;
       setup_pins(); //sort out pinMode
-      set_speed(initial_rpm);
+      set_rpm(initial_rpm);
       drive_pins(0); //start with nothing
       
     }
 
 void Stepper::set_timer(int timer_number, void (*isr)()){
   //set the timer to 1Mhz
-  //might need to make sure this equates to 1Mhz because all of the interrupt timing is based on that
   Timer_cfg = timerBegin(timer_number, 80, true); 
   timerAttachInterrupt(Timer_cfg, isr, true);
   //timerAlarmWrite(Timer_cfg, 500, true);
   timerAlarmWrite(Timer_cfg, this->step_interval_us, true); //for variable interrupt timing
   timerAlarmEnable(Timer_cfg);
-
-  //Serial.println("disabling stepper in set_timer");
-  //timerAlarmDisable(Timer_cfg); //start with the timer disabled until required
   
 }
 
 int Stepper::step_once(){
+  /*
+  would like this to include some code that only drives the pins for 1000us, then switches them off to conserve battery
+  if(driven){
+    drive_pins(0);
+    timerAlarmWrite(Timer_cfg, (this->step_interval_us - 1000), true); 
+    }
+  */
   if((steps_remaining <= 0)){ 
-    drive_pins(0); //if there are no steps left
+    drive_pins(0); //if there are no steps left, save battery
     return 0;
   } else {
     current_state += direction;
@@ -106,13 +109,7 @@ void Stepper::drive_pins(int _state)
       }
     }
 
-void Stepper::set_speed(int _rpm){
-    //should check for limit here... max 20, min -20? if negative then set the interval as abs(rpm) and set direction -ve
-    if(_rpm > 16){
-      _rpm = 16;
-    } else if(_rpm < 1){
-      _rpm = 1;
-    }
+void Stepper::set_rpm(int _rpm){
     this->speed_rpm = _rpm;
     this->step_interval_us = (60L * 1000L * 1000L) / steps_per_rev / speed_rpm;
 

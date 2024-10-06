@@ -9,7 +9,7 @@ public:
     void set_timer(int timer_number, void (*isr)());
 
     void setup_pins();
-    void set_speed(int _rpm);
+    void set_rpm(int _rpm);
     int step_once();
     //void update_stepper();
     void manual_steps(int steps);
@@ -24,9 +24,9 @@ private:
     int motor_pin4; //orange
     int steps_per_rev;
     int speed_rpm;
-    int steps_remaining; // will need to sort this out for continuous mode
+    volatile int steps_remaining; // will need to sort this out for continuous mode, probably just put an if statement in step_once
     unsigned int step_interval_us;
-    int current_state;
+    volatile int current_state;
     int direction; // ccw = 1, cw = -1 (ccw is given in datasheet)
     hw_timer_t *Timer_cfg;
 

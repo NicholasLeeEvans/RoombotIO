@@ -12,6 +12,7 @@ class Roombot {
         Stepper *stepper_left;
         Stepper *stepper_right;
         int rpm; //probably change this to float later for more precision, might be pointless though
+        int rpm_limit;
         RangeFinder *front_range;
         int front_range_offset;
         //RangeFinder *left_range;
