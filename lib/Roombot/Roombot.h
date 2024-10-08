@@ -6,6 +6,7 @@
 #include "RangeFinder.h"
 #include "LinearInterpolator.h"
 #include "BluetoothSerial.h"
+#include "Planner.h"
 
 class Roombot {
     private:

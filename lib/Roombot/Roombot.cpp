@@ -46,7 +46,17 @@ void Roombot::init_serialBT(){
 void Roombot::reset_x_y_angle(){
     this->location_x = 0;
     this->location_y = 0;
+
+    /*
+    this doesnt work as it is updated again based on steps.
     this->angle = 0.0f;
+    */
+    //just reset the counters and angle will be sorted out. need to clear 'last steps' too otherwise xy will break
+    this->counter_left = 0;
+    this->counter_right = 0;
+    this->last_left = 0;
+    this->last_right = 0;
+    
 }
 
 void Roombot::set_rpm(int rpm){
@@ -148,7 +158,7 @@ void Roombot::print_location_angle(){
 }
 
 void Roombot::update_position(){
-    //calculates the cartesian coords and angle of the robot
+    //calculates the cartesian coords and angle of the robot, basically this overrides any angle clearing code.
     
     //not sure but i might need to save these values at the start so i can make sure they arent updated while i do calcs...
     noInterrupts();
@@ -204,18 +214,10 @@ void Roombot::checkBTcommands(){
         this->turn_angle(-45);
         break;
       case 'j':
-        //Serial.print("speeding up to: ");
-        new_rpm = min(this->get_rpm() + 2,16);
-        //Serial.print(new_rpm);
-        //Serial.println("rpm");
-        this->set_rpm(new_rpm);
+        this->set_rpm(this->get_rpm() + 1);
         break;
       case 'k':
-        //Serial.print("slowing down to: ");
-        new_rpm = max(this->get_rpm() - 2,2);
-        //Serial.print(new_rpm);
-        //Serial.println("rpm");
-        this->set_rpm(new_rpm);
+        this->set_rpm(this->get_rpm() - 1);
         break;
       case 'z':
         //Serial.println("spin and scan: ");

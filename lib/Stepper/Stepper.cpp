@@ -13,9 +13,7 @@ Stepper::Stepper(int _steps_per_rev, int _pin1, int _pin2, int _pin3, int _pin4)
       this->direction = 1;
       setup_pins(); //sort out pinMode
       set_rpm(initial_rpm);
-      drive_pins(0); //start with nothing
-      this->driving = false;
-      
+      drive_pins(0); //start with nothing      
     }
 
 void Stepper::set_timer(int timer_number, void (*isr)()){
@@ -30,35 +28,19 @@ void Stepper::set_timer(int timer_number, void (*isr)()){
 
 int Stepper::step_once(){
   int return_val = 0;
-  noInterrupts();
   if((steps_remaining <= 0)){ 
     drive_pins(0); //if there are no steps left, save battery
-    this->driving = true; //not sure about this one
   } else {
-    //this code is to stop driving the motors after about 1ms, so there is less power consumption
+    this->current_state += this->direction;
+    if(this->current_state > 8)
+      this->current_state = 1;
+    else if(this->current_state < 1)
+      this->current_state = 8;
+    drive_pins(this->current_state);
     
-    if(this->driving){
-      drive_pins(0);
-      timerAlarmWrite(Timer_cfg, (this->step_interval_us - minimum_interval), true); 
-      this->driving = false;
-    } else {
-      //drive for this amount of time
-      timerAlarmWrite(Timer_cfg, minimum_interval, true);
-      
-      this->current_state += this->direction;
-      if(this->current_state > 8)
-        this->current_state = 1;
-      else if(this->current_state < 1)
-        this->current_state = 8;
-      drive_pins(this->current_state);
-      
-      --steps_remaining;
-      return_val = this->direction; //return one step in whichever direction, this will be consumed by roombot inc steps
-      this->driving = true;
+    --steps_remaining;
+    return_val = this->direction; //return one step in whichever direction, this will be consumed by roombot inc steps
     }
-    
-  }
-  interrupts();
   return return_val;
   
 }
