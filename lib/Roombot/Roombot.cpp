@@ -106,31 +106,28 @@ void Roombot::increment_step_count(int _step, int _side){
 }
 
 int Roombot::scan_once(){
-    int scan_value = this->front_range->get_range();
-    //Serial.print("raw val: ");
-    //Serial.print(scan_value);
-    int guess_mm = this->my_interpolator.calculate_distance(scan_value);
-    //Serial.print(", estimated distance: ");
-    //Serial.print(guess_mm);
+    //probably need to ignore anything too large right now...
+    int scan_value = this->front_range->get_range_value();
+    int calculated_mm_distance = this->my_interpolator.calculate_distance(scan_value);
 
-    //estimate the position of the scan, add the offset from center to range finder. other will need to have angle offset
-    int range_x = this->location_x + ((this->front_range_offset + guess_mm) * cos(this->angle * PI_OVER_180));
-    int range_y = this->location_y + ((this->front_range_offset + guess_mm) * sin(this->angle * PI_OVER_180));
 
-    /*
-    SerialBT.print("(x, y): (");
-    SerialBT.print(range_x);
-    SerialBT.print(", ");
-    SerialBT.print(range_y);
-    SerialBT.println(")");
-    */
-    SerialBT.print(range_x);
-    SerialBT.print(",");
-    SerialBT.println(range_y);
+    //ignore big values as they are pretty sketchy...
+
+    if(calculated_mm_distance < 300){
+      //estimate the position of the scan, add the offset from center to range finder. other will need to have angle offset
+      int range_x = this->location_x + ((this->front_range_offset + calculated_mm_distance) * cos(this->angle * PI_OVER_180));
+      int range_y = this->location_y + ((this->front_range_offset + calculated_mm_distance) * sin(this->angle * PI_OVER_180));
+
+      SerialBT.print(range_x);
+      SerialBT.print(",");
+      SerialBT.println(range_y);
+    } else {
+      SerialBT.print("returned val greater than 300mm: ");
+      SerialBT.println(calculated_mm_distance);
+    }
     
-    
-
-    return scan_value;
+    //..still return the guess
+    return calculated_mm_distance;
 }
 
 void Roombot::spin_and_scan(){

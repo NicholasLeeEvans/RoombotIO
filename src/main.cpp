@@ -25,6 +25,10 @@ void IRAM_ATTR Timer_ISR_Right()
   my_roombot.increment_step_count(stepper_right.step_once(),1);
 }
 
+void IRAM_ATTR Timer_ISR_RangeFinder()
+{
+  //scan value
+}
 
 
 
@@ -38,6 +42,8 @@ void setup() {
   stepper_left.set_timer(1, &Timer_ISR_Left);
   stepper_right.set_timer(2, &Timer_ISR_Right);
   delay(100);
+
+  range_front.set_timer(3, &Timer_ISR_RangeFinder);
 
   Serial.println("starting serialBT");
   my_roombot.init_serialBT();
