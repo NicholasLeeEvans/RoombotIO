@@ -33,7 +33,7 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
 
     this->my_interpolator = LinearInterpolator();
 
-    this->step_to_angle_ratio = 180.0f * this->wheel_diam / this->wheel_base / stepper_left->get_steps_per_rev();
+    this->step_to_angle_ratio = (180.0f * this->wheel_diam) / this->wheel_base / stepper_left->get_steps_per_rev();
     
     
     delay(10);
