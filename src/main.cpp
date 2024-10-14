@@ -27,10 +27,11 @@ void IRAM_ATTR Timer_ISR_Right()
 
 void IRAM_ATTR Timer_ISR_RangeFinder()
 {
-  //scan value
+  range_front.take_single_reading();
 }
 
-
+int last_update;
+#define POSITION_UPDATE_MS 1000
 
 void setup() {
 
@@ -51,6 +52,8 @@ void setup() {
   my_roombot.set_rpm(10); 
   delay(10);
   Serial.println("entering loop: ");
+
+  last_update = millis();
 }
 
 
@@ -58,6 +61,16 @@ void loop() {
   //checks the bluetooth serial input and then moves based on wasd controls
   my_roombot.checkBTcommands();
   my_roombot.update_position();
+  int now = millis();
+  if(now > (last_update + POSITION_UPDATE_MS)){
+    last_update = now;
+    Serial.print(int(my_roombot.get_position_x()));
+    Serial.print(",");
+    Serial.print(int(my_roombot.get_position_y()));
+    Serial.print(",");
+    Serial.println(int(my_roombot.get_angle()));
+  }
+  
   delay(50);
 }
 

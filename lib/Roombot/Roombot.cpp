@@ -91,7 +91,7 @@ void Roombot::spin_once(int direction){
 void Roombot::move_forward(int distance){
     float wheel_rotations = float(distance) / this->wheel_circumference;
     int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
-    Serial.println(steps_needed);
+    //Serial.println(steps_needed);
     this->stepper_left->manual_steps(steps_needed);
     this->stepper_right->manual_steps(steps_needed);
 }

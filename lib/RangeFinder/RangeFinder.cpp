@@ -13,7 +13,7 @@ void RangeFinder::set_timer(int timer_number, void (*isr)()){
     Timer_cfg = timerBegin(timer_number, 80, true); 
     timerAttachInterrupt(Timer_cfg, isr, true);
     //timerAlarmWrite(Timer_cfg, 500, true);
-    timerAlarmWrite(Timer_cfg, 2000, true); //for variable interrupt timing
+    timerAlarmWrite(Timer_cfg, 300 * 1000, true); //for variable interrupt timing
     timerAlarmEnable(Timer_cfg);
 }
 
@@ -23,7 +23,13 @@ void RangeFinder::clear_stored_vals(){
     }
 }
 
-void RangeFinder::take_new_readings(int count){
+void RangeFinder::take_single_reading(){
+    analogRead(this->pin_number);
+    this->stored_vals[iterator] = analogRead(this->pin_number);
+    iterator = (iterator + 1) % 7;
+}
+
+void RangeFinder::take_multiple_readings(int count){
     if(count < 1){
         count = 1;
     }else if(count > 7){
@@ -31,16 +37,14 @@ void RangeFinder::take_new_readings(int count){
     }
         
     for(int itr = 0; itr < count; itr++){
-        analogRead(this->pin_number);
-        this->stored_vals[iterator] = analogRead(this->pin_number);
-        iterator = (iterator + 1) % 7;
+        this->take_single_reading();
     }
 
 }
 
 int RangeFinder::get_range_value(){
 
-    take_new_readings(7);
+    //this->take_multiple_readings(7);
 
     //sort the stored values, (probably dont need to swap them all just find the min and max them subtract from total...)
     bool swapped;
