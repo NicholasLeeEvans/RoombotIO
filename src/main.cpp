@@ -17,7 +17,7 @@ Roombot my_roombot(&stepper_left, &stepper_right, &range_front);
 //would like to remove these and put in the class somehow... maybe reference the timer with a 1 and 2 in the roombot class and do it there?
 void IRAM_ATTR Timer_ISR_Left()
 {
-  my_roombot.increment_step_count(stepper_left.step_once(),-1); //this feels a bit convoluted, might be better just to split it
+  my_roombot.increment_step_count(stepper_left.step_once(),-1);
 }
 
 void IRAM_ATTR Timer_ISR_Right()
@@ -27,10 +27,10 @@ void IRAM_ATTR Timer_ISR_Right()
 
 void IRAM_ATTR Timer_ISR_RangeFinder()
 {
-  range_front.take_single_reading();
+  range_front.take_multiple_readings(7);
 }
 
-int last_update;
+unsigned long last_update; // should be unsigned long
 #define POSITION_UPDATE_MS 1000
 
 void setup() {
@@ -47,7 +47,7 @@ void setup() {
   range_front.set_timer(3, &Timer_ISR_RangeFinder);
 
   Serial.println("starting serialBT");
-  my_roombot.init_serialBT();
+  my_roombot.init_serialBT(); //want to change this to USBNOW
   delay(10);
   my_roombot.set_rpm(10); 
   delay(10);
@@ -61,14 +61,18 @@ void loop() {
   //checks the bluetooth serial input and then moves based on wasd controls
   my_roombot.checkBTcommands();
   my_roombot.update_position();
-  int now = millis();
+  unsigned long now = millis();
   if(now > (last_update + POSITION_UPDATE_MS)){
     last_update = now;
+    //reports the x,y,angle, and range detected so this can be put into the map building
     Serial.print(int(my_roombot.get_position_x()));
     Serial.print(",");
     Serial.print(int(my_roombot.get_position_y()));
     Serial.print(",");
-    Serial.println(int(my_roombot.get_angle()));
+    Serial.print(int(my_roombot.get_angle()));
+    Serial.print(",");
+    Serial.println(int(my_roombot.scan_once()));
+
   }
   
   delay(50);

@@ -118,14 +118,14 @@ int Roombot::scan_once(){
       int range_x = this->location_x + ((this->front_range_offset + calculated_mm_distance) * cos(this->angle * PI_OVER_180));
       int range_y = this->location_y + ((this->front_range_offset + calculated_mm_distance) * sin(this->angle * PI_OVER_180));
 
-      SerialBT.print(range_x);
-      SerialBT.print(",");
-      SerialBT.println(range_y);
+      //SerialBT.print(range_x);
+      //SerialBT.print(",");
+      //SerialBT.println(range_y);
     } else {
       SerialBT.print("returned val greater than 300mm: ");
-      SerialBT.println(calculated_mm_distance);
+      //SerialBT.println(calculated_mm_distance);
     }
-    
+    SerialBT.println(calculated_mm_distance);
     //..still return the guess
     return calculated_mm_distance;
 }
