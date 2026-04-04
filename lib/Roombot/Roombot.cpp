@@ -137,7 +137,7 @@ void Roombot::spin_and_scan(){
     delay(5);
     int old_rpm = this->get_rpm();
     this->set_rpm(5);
-    while((this->stepper_left->get_steps_remaining() > 0) || (this->stepper_left->get_steps_remaining() > 0)){
+    while((this->stepper_left->get_steps_remaining() > 0) || (this->stepper_right->get_steps_remaining() > 0)){
         this->update_position();
         this->scan_once();
         delay(200);
