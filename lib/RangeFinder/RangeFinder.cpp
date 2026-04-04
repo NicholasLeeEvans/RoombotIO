@@ -47,26 +47,21 @@ void RangeFinder::take_multiple_readings(int count){
 
 int RangeFinder::get_range_value(){
 
-    //this->take_multiple_readings(7);
-
-    //sort the stored values, (probably dont need to swap them all just find the min and max them subtract from total...)
-    bool swapped;
-    do{
-        swapped = false;
-        for(int itr = 1; itr < STORED_READS; itr++){
-            if(stored_vals[itr] < stored_vals[itr - 1]){
-                int temp_value = stored_vals[itr];
-                stored_vals[itr] = stored_vals[itr - 1];
-                stored_vals[itr - 1] = temp_value;
-                swapped = true;
-            }
-        }
-    } while(swapped == true);
-    //remove the top and bottom, then average the remaining...
+    int min = stored_vals[0];
+    int max = stored_vals[0];
     int sum = 0;
-    for(int itr = 1; itr < STORED_READS - 1; itr++){
-        sum += stored_vals[itr];
+    
+    for(int itr = 0; itr < STORED_READS; itr++)
+    {
+        int check_value = stored_vals[itr];
+        if(check_value < min)
+            min = check_value;
+        if(check_value > max)
+            max = check_value;
+
+        sum += check_value;
     }
+    sum -= (min + max);
 
     return sum / (STORED_READS - 2);
     
