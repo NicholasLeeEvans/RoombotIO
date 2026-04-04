@@ -1,12 +1,24 @@
 #include "Roombot.h"
 
-#define PI_OVER_180 0.01745329
+#define PI          3.14159
+#define DEG_TO_RAD  0.01745329
+#define INITIAL_RPM 10
+#define RPM_LIMIT   16
 
-Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
+#define WHEELBASE       120
+#define WHEEL_DIAMETER  62
+
+#define FRONT_RANGEFINDER_OFFSET  70
+#define MAX_RANGEFINDER_SCAN_DIST 300
+
+#define FORWARD_COMMAND_DIST  100
+#define TURN_COMMAND_ANGLE    45
+
+Roombot::Roombot(Stepper *_stepper_left, Stepper *_stepper_right, RangeFinder *_front_range){
     
     
-    int initial_rpm = 10; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
-    this->rpm_limit = 16;
+    int initial_rpm = INITIAL_RPM; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
+    this->rpm_limit = RPM_LIMIT;
     // set up initial location
     this->reset_x_y_angle();
 
@@ -17,19 +29,19 @@ Roombot::Roombot(Stepper *left, Stepper *right, RangeFinder *front){
     this->last_right = 0;
 
     //based off prototype, in mm
-    this->wheel_base = 120;
-    this->wheel_diam = 62;
-    this->wheel_circumference = this->wheel_diam * 3.1415;
+    this->wheel_base = WHEELBASE;
+    this->wheel_diam = WHEEL_DIAMETER;
+    this->wheel_circumference = this->wheel_diam * PI;
 
     //attach steppers
-    this->stepper_left = left;
-    this->stepper_right = right;
+    this->stepper_left = _stepper_left;
+    this->stepper_right = _stepper_right;
     
     set_rpm(initial_rpm);
 
     //set up rangefinder
-    this->front_range = front;
-    this->front_range_offset = 70;
+    this->front_range = _front_range;
+    this->front_range_offset = FRONT_RANGEFINDER_OFFSET;
 
     this->my_interpolator = LinearInterpolator();
 
@@ -97,7 +109,6 @@ void Roombot::move_forward(int distance){
 }
 
 void Roombot::increment_step_count(int _step, int _side){
-    //no floating point calcs in an interrupt!!
     if(_side == -1){
         this->counter_left += _step;
     }else{
@@ -113,10 +124,10 @@ int Roombot::scan_once(){
 
     //ignore big values as they are pretty sketchy...
 
-    if(calculated_mm_distance < 300){
+    if(calculated_mm_distance < MAX_RANGEFINDER_SCAN_DIST){
       //estimate the position of the scan, add the offset from center to range finder. other will need to have angle offset
-      int range_x = this->location_x + ((this->front_range_offset + calculated_mm_distance) * cos(this->angle * PI_OVER_180));
-      int range_y = this->location_y + ((this->front_range_offset + calculated_mm_distance) * sin(this->angle * PI_OVER_180));
+      int range_x = this->location_x + ((this->front_range_offset + calculated_mm_distance) * cos(this->angle * DEG_TO_RAD));
+      int range_y = this->location_y + ((this->front_range_offset + calculated_mm_distance) * sin(this->angle * DEG_TO_RAD));
 
       //SerialBT.print(range_x);
       //SerialBT.print(",");
@@ -179,8 +190,8 @@ void Roombot::update_position(){
     int new_linear_steps = (new_left_steps + new_right_steps) / 2;
     float distance_travelled = new_linear_steps * (float(this->wheel_circumference) / stepper_left->get_steps_per_rev());
 
-    float d_x = distance_travelled * cos(this->angle * PI_OVER_180);
-    float d_y = distance_travelled * sin(this->angle * PI_OVER_180);
+    float d_x = distance_travelled * cos(this->angle * DEG_TO_RAD);
+    float d_y = distance_travelled * sin(this->angle * DEG_TO_RAD);
 
     this->location_x += d_x;
     this->location_y += d_y;
@@ -196,19 +207,19 @@ void Roombot::checkBTcommands(){
     switch(message){
       case 'w':
         //Serial.println("moving forward");
-        this->move_forward(100);
+        this->move_forward(FORWARD_COMMAND_DIST);
         break;
       case 's':
         //Serial.println("moving backward");
-        this->move_forward(-100);
+        this->move_forward(-FORWARD_COMMAND_DIST);
         break;
       case 'a':
         //Serial.println("turning left");
-        this->turn_angle(45);
+        this->turn_angle(TURN_COMMAND_ANGLE);
         break;
       case 'd':
         //Serial.println("turning right");
-        this->turn_angle(-45);
+        this->turn_angle(-TURN_COMMAND_ANGLE);
         break;
       case 'j':
         this->set_rpm(this->get_rpm() + 1);

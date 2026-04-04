@@ -40,8 +40,6 @@ class Roombot {
         float angle;
         float step_to_angle_ratio;
 
-        int scanned_values[];
-
     public:
         Roombot(Stepper *left, Stepper *right, RangeFinder *front);
         void init_serialBT();
