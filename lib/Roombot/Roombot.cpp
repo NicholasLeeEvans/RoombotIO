@@ -1,7 +1,5 @@
 #include "Roombot.h"
 
-#define PI          3.14159
-#define DEG_TO_RAD  0.01745329
 #define INITIAL_RPM 10
 #define RPM_LIMIT   16
 
@@ -51,9 +49,12 @@ Roombot::Roombot(Stepper *_stepper_left, Stepper *_stepper_right, RangeFinder *_
     delay(10);
 }
 
+/*
 void Roombot::init_serialBT(){
     this->SerialBT.begin("Roombot");
 }
+*/
+
 
 void Roombot::reset_x_y_angle(){
     this->location_x = 0;
@@ -133,10 +134,8 @@ int Roombot::scan_once(){
       //SerialBT.print(",");
       //SerialBT.println(range_y);
     } else {
-      SerialBT.print("returned val greater than 300mm: ");
       //SerialBT.println(calculated_mm_distance);
     }
-    SerialBT.println(calculated_mm_distance);
     //..still return the guess
     return calculated_mm_distance;
 }
@@ -157,12 +156,15 @@ void Roombot::spin_and_scan(){
 }
 
 void Roombot::print_location_angle(){
-    SerialBT.print("(x, y): (");
-    SerialBT.print(int(this->get_position_x()));
-    SerialBT.print(", ");
-    SerialBT.print(int(this->get_position_y()));
-    SerialBT.print("), angle: ");
-    SerialBT.println(int(this->get_angle()));
+  //TODO replace the BT code that was removed
+}
+
+StatusData Roombot::get_status(){
+  return {int(this->get_position_x()),
+          int(this->get_position_y()),
+          int(this->get_angle()),
+          int(this->scan_once())
+  };
 }
 
 void Roombot::update_position(){
@@ -198,56 +200,103 @@ void Roombot::update_position(){
 
 }
 
+/*
 void Roombot::checkBTcommands(){
-    if (this->SerialBT.available()) {
-    char message = (SerialBT.read());
-    //Serial.print("received: ");
-    //Serial.println(message);
-    int new_rpm;
-    switch(message){
-      case 'w':
-        //Serial.println("moving forward");
-        this->move_forward(FORWARD_COMMAND_DIST);
-        break;
-      case 's':
-        //Serial.println("moving backward");
-        this->move_forward(-FORWARD_COMMAND_DIST);
-        break;
-      case 'a':
-        //Serial.println("turning left");
-        this->turn_angle(TURN_COMMAND_ANGLE);
-        break;
-      case 'd':
-        //Serial.println("turning right");
-        this->turn_angle(-TURN_COMMAND_ANGLE);
-        break;
-      case 'j':
-        this->set_rpm(this->get_rpm() + 1);
-        break;
-      case 'k':
-        this->set_rpm(this->get_rpm() - 1);
-        break;
-      case 'z':
-        //Serial.println("spin and scan: ");
-        this->spin_and_scan();
-        break;
-      case 'x':
-        //Serial.println("one scan: ");
-        this->scan_once();
-        break;
-      case 'c':
-        //Serial.println("resetting x,y coords and angle: ");
-        this->reset_x_y_angle();
-        break;
-      case 'e':
-        this->print_location_angle();
-        break;
-      default:
-        //Serial.println("unknown message received :(");
-        break;  
+  if (this->SerialBT.available()) {
+  char message = (SerialBT.read());
+  //Serial.print("received: ");
+  //Serial.println(message);
+  int new_rpm;
+  switch(message){
+    case 'w':
+      //Serial.println("moving forward");
+      this->move_forward(FORWARD_COMMAND_DIST);
+      break;
+    case 's':
+      //Serial.println("moving backward");
+      this->move_forward(-FORWARD_COMMAND_DIST);
+      break;
+    case 'a':
+      //Serial.println("turning left");
+      this->turn_angle(TURN_COMMAND_ANGLE);
+      break;
+    case 'd':
+      //Serial.println("turning right");
+      this->turn_angle(-TURN_COMMAND_ANGLE);
+      break;
+    case 'j':
+      this->set_rpm(this->get_rpm() + 1);
+      break;
+    case 'k':
+      this->set_rpm(this->get_rpm() - 1);
+      break;
+    case 'z':
+      //Serial.println("spin and scan: ");
+      this->spin_and_scan();
+      break;
+    case 'x':
+      //Serial.println("one scan: ");
+      this->scan_once();
+      break;
+    case 'c':
+      //Serial.println("resetting x,y coords and angle: ");
+      this->reset_x_y_angle();
+      break;
+    case 'e':
+      this->print_location_angle();
+      break;
+    default:
+      //Serial.println("unknown message received :(");
+      break;  
     } //end switch
   } //end if serialBT available
+   
+}*/
+void Roombot::execute_command(Command cmd)
+{
+  switch(cmd.type){
+    case Command::STRAIGHT:{
+      this->move_forward(cmd.params.straight.distance);
+      break;
+    }
+      
+    
+    case Command::ARC_TURN:{
+      int turn_radius = cmd.params.arc_turn.radius;
+      if(turn_radius == 0){
+        this->turn_angle((float)cmd.params.arc_turn.angle);
+      } else {
+        // TODO nonzero turn radius condition
+      }
+      break;
+    }
+      
+    
+    case Command::SET_RPM:{
+      this->set_rpm(cmd.params.set_rpm.rpm);
+      break;
+    }
+      
+    
+    case Command::STOP:
+      break;
+    
+    case Command::STATUS:
+      this->print_location_angle();
+      break;
 
+    case Command::SCAN:
+      this->scan_once();
+      break;
+    
+    default:
+      break;
+    
+    
+    
+    
+    
+  }
 }
 
   

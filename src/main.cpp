@@ -4,6 +4,27 @@
 #include "RangeFinder.h"
 #include "Roombot.h"
 
+#include <ESPAsyncWebServer.h>
+#include <WiFi.h>
+
+const char* ssid = "aterm-326c63-g";
+const char* password = "282818d307488";
+
+void setup_wifi(const char* ssid, const char* password) {
+    Serial.println("Connecting to WiFi...");
+    WiFi.begin(ssid, password);
+    
+    while(WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    
+    Serial.println("\nWiFi connected!");
+    Serial.println(WiFi.localIP());
+}
+
+AsyncWebServer server(80);
+
 #define IR_RANGE_PIN 36
 
 RangeFinder range_front(IR_RANGE_PIN);
@@ -39,18 +60,83 @@ void setup() {
   Serial.println("serial started");
   delay(10);
 
+  setup_wifi(ssid, password);
+
+  server.on("/scan", HTTP_GET, [](AsyncWebServerRequest *request){
+    int distance = my_roombot.scan_once();
+    String response = "{\"distance\":" + String(distance) + "}";
+    request->send(200, "application/json", response);
+  });
+
+  server.on("/action", HTTP_GET, [](AsyncWebServerRequest *request){
+    if(!request->hasParam("type")){
+        request->send(400, "application/json", "{\"error\":\"missing type\"}");
+        return;
+    }
+    String type = request->getParam("type")->value();
+    Command cmd;
+    
+    if(type == "straight"){
+      if(!request->hasParam("distance")) {
+        request->send(400, "application/json", "{\"error\":\"missing distance\"}");
+       return;
+      }
+      int distance = request->getParam("distance")->value().toInt();
+      cmd.type = Command::STRAIGHT;
+      cmd.params.straight.distance = distance; 
+    } else if(type == "turn"){
+      if(!request->hasParam("angle")){
+        request->send(400, "application/json", "{\"error\":\"missing turn angle\"}");
+       return;
+      }
+      int angle = request->getParam("angle")->value().toInt();
+      int radius = request->hasParam("radius") ? request->getParam("radius")->value().toInt() : 0;
+      cmd.type = Command::ARC_TURN;
+      cmd.params.arc_turn.angle = angle;
+      cmd.params.arc_turn.radius = radius;
+    } else if(type == "speed"){
+      if(!request->hasParam("set_rpm")){
+        request->send(400, "application/json", "{\"error\":\"missing rpm\"}");
+       return;
+      }
+      int rpm = request->getParam("set_rpm")->value().toInt();
+      cmd.type = Command::SET_RPM;
+      cmd.params.set_rpm.rpm = rpm;
+    } else if(type == "scan"){
+      int distance = my_roombot.scan_once();
+      String response = "{\"distance\":" + String(distance) + "}";
+      request->send(200, "application/json", response);
+      return;  // Don't call execute_command for SCAN
+    } else if(type == "status"){
+      cmd.type = Command::STATUS;
+      StatusData status = my_roombot.get_status();
+      String response = "{\"x\":" + String(status.x) + ",\"y\":" + String(status.y) 
+                      + ",\"angle\":" + String(status.angle) + ",\"range\":" + String(status.range) + "}";
+      request->send(200, "application/json", response);
+      return;  // Don't call execute_command for STATUS
+    } else {
+      request->send(400, "application/json", "{\"error\": " + type + "\"}");
+      return;
+    }
+      
+    my_roombot.execute_command(cmd);
+    request->send(200, "application/json", "{\"status\":\"ok\"}");
+    
+  });
+
+  server.begin();
+  Serial.println("HTTP server started");
+
+  my_roombot.set_rpm(10); 
+  delay(10);
+
   Serial.println("setting timers");
   stepper_left.set_timer(1, &Timer_ISR_Left);
   stepper_right.set_timer(2, &Timer_ISR_Right);
   delay(100);
 
   range_front.set_timer(3, &Timer_ISR_RangeFinder);
-
-  Serial.println("starting serialBT");
-  my_roombot.init_serialBT(); //want to change this to USBNOW
-  delay(10);
-  my_roombot.set_rpm(10); 
-  delay(10);
+  
   Serial.println("entering loop: ");
 
   last_update = millis();
@@ -58,23 +144,7 @@ void setup() {
 
 
 void loop() {
-  //checks the bluetooth serial input and then moves based on wasd controls
-  my_roombot.checkBTcommands();
   my_roombot.update_position();
-  unsigned long now = millis();
-  if(now > (last_update + POSITION_UPDATE_MS)){
-    last_update = now;
-    //reports the x,y,angle, and range detected so this can be put into the map building
-    Serial.print(int(my_roombot.get_position_x()));
-    Serial.print(",");
-    Serial.print(int(my_roombot.get_position_y()));
-    Serial.print(",");
-    Serial.print(int(my_roombot.get_angle()));
-    Serial.print(",");
-    Serial.println(int(my_roombot.scan_once()));
-
-  }
-  
   delay(50);
 }
 
