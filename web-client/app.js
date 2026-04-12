@@ -30,16 +30,29 @@ document.getElementById("scanBtn").addEventListener("click", () => {
 });
 
 document.getElementById("forwardBtn").addEventListener("click", () => {
-    sendCommand("straight",50);
+    sendCommand("straight",100);
 });
+document.getElementById("forwardBtnFine").addEventListener("click", () => {
+    sendCommand("straight",10);
+});
+
 document.getElementById("backBtn").addEventListener("click", () => {
-    sendCommand("straight",-50);
+    sendCommand("straight",-100);
+});
+document.getElementById("backBtnFine").addEventListener("click", () => {
+    sendCommand("straight",-10);
 });
 
 document.getElementById("leftBtn").addEventListener("click", () => {
-    sendCommand("turn",30,0);
+    sendCommand("turn",45,0);
+});
+document.getElementById("leftBtnFine").addEventListener("click", () => {
+    sendCommand("turn",15,0);
 });
 
 document.getElementById("rightBtn").addEventListener("click", () => {
-    sendCommand("turn",-30,0);
+    sendCommand("turn",-45,0);
+});
+document.getElementById("rightBtnFine").addEventListener("click", () => {
+    sendCommand("turn",-15,0);
 });

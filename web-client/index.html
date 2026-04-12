@@ -11,13 +11,22 @@
 <body>
     <h1>Roombot WiFi Control</h1>
 
-    <button id="scanBtn">Scan</button>
-    <br>
-    <button id="forwardBtn">Forward</button>
-    <br>
-    <button id="leftBtn">Left</button> <button id="rightBtn">Right</button>
-    <br>
-    <button id="backBtn">Back</button>
+    <div id="grid">
+        <button id="forwardBtn">Fwd 100mm</button>
+        <button id="forwardBtnFine">Fwd 10mm</button>
+        
+
+        <button id="leftBtn">Left 45deg</button> 
+        <button id="leftBtnFine">Left 15deg</button> 
+
+        <button id="scanBtn">Scan</button>
+        <button id="rightBtnFine">Right 15deg</button>
+        <button id="rightBtn">Right 45deg</button>
+         
+        <button id="backBtnFine">Back 10mm</button>
+        <button id="backBtn">Back 100mm</button>
+    </div>
+
     <p>Range: <span id="range">--</span>mm</p>
 
     <script src="app.js"></script>

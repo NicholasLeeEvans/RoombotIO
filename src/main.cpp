@@ -83,7 +83,10 @@ void setup() {
       }
       int distance = request->getParam("distance")->value().toInt();
       cmd.type = Command::STRAIGHT;
-      cmd.params.straight.distance = distance; 
+      cmd.params.straight.distance = distance;
+      Serial.print("moving ");
+      Serial.print(distance);
+      Serial.println("mm"); 
     } else if(type == "turn"){
       if(!request->hasParam("angle")){
         request->send(400, "application/json", "{\"error\":\"missing turn angle\"}");
@@ -94,6 +97,9 @@ void setup() {
       cmd.type = Command::ARC_TURN;
       cmd.params.arc_turn.angle = angle;
       cmd.params.arc_turn.radius = radius;
+      Serial.print("turning ");
+      Serial.print(angle);
+      Serial.println("degrees");
     } else if(type == "speed"){
       if(!request->hasParam("set_rpm")){
         request->send(400, "application/json", "{\"error\":\"missing rpm\"}");
@@ -104,6 +110,7 @@ void setup() {
       cmd.params.set_rpm.rpm = rpm;
     } else if(type == "scan"){
       int distance = my_roombot.scan_once();
+
       String response = "{\"distance\":" + String(distance) + "}";
       request->send(200, "application/json", response);
       return;  // Don't call execute_command for SCAN
@@ -125,6 +132,9 @@ void setup() {
   });
 
   server.begin();
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET, POST, PUT");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type");
   Serial.println("HTTP server started");
 
   my_roombot.set_rpm(10); 
