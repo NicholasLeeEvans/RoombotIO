@@ -52,8 +52,11 @@ void IRAM_ATTR Timer_ISR_RangeFinder()
   range_front.take_multiple_readings(7);
 }
 
-unsigned long last_update; // should be unsigned long
-#define POSITION_UPDATE_MS 1000
+unsigned long last_position_update;
+#define POSITION_UPDATE_MS 50
+
+unsigned long last_range_update;
+#define RANGE_UPDATE_MS 100
 
 void setup() {
 
@@ -140,17 +143,24 @@ void setup() {
   
   Serial.println("entering loop: ");
 
-  last_update = millis();
+  last_position_update = millis();
+  last_range_update = millis();
+  
 }
 
 
 void loop() {
-  my_roombot.update_position();
-
-  int distance = my_roombot.scan_once();
-      
-  events.send(String(distance).c_str(), "range");
-  delay(50);
+  unsigned long now = millis();
+  if(now - last_position_update > POSITION_UPDATE_MS){
+    last_position_update = now;
+    my_roombot.update_position();
+  }
+  
+  if(now - last_range_update > RANGE_UPDATE_MS){
+    last_range_update = now;
+    int distance = my_roombot.scan_once();
+    events.send(String(distance).c_str(), "range");
+  }
 }
 
 

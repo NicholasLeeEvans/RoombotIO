@@ -1,8 +1,47 @@
 const ESP_IP = "192.168.10.117";
 
+const rangeChartctx = document.getElementById("rangeChart");
+
+const rangeChartConfig = {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+        label: 'Range (mm)',
+        data: [],
+    }]
+  },
+  options: {
+    animation: false,
+    scales: {
+        y: {
+            min: 0,
+            max: 1200,
+            ticks:
+            {
+                stepSize: 100,
+            }
+        }
+    }
+  }
+};
+
+const rangeChart = new Chart(rangeChartctx, rangeChartConfig);
+const max_labels = 50;
 const es = new EventSource(`http://${ESP_IP}/events`);
 es.addEventListener("range", (e) => { 
-    document.getElementById("range").textContent = e.data; });
+    document.getElementById("range").textContent = e.data; 
+    const d = rangeChartConfig.data.datasets[0].data;
+    const l = rangeChartConfig.data.labels;
+    d.push(Number(e.data));
+    if (l.length < max_labels) {
+        l.push(l.length);
+    }
+    if (d.length > max_labels) {
+        d.shift();
+    }
+    rangeChart.update();
+});
 
 
 async function sendCommand(type, param1, param2) {
