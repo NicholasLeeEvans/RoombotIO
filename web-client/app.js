@@ -54,3 +54,29 @@ document.getElementById("rightBtn").addEventListener("click", () => {
 document.getElementById("rightBtnFine").addEventListener("click", () => {
     sendCommand("turn",-15,0);
 });
+
+document.getElementById("leftBtnArcTight").addEventListener("click", () => {
+    sendCommand("turn",45,60);
+});
+document.getElementById("leftBtnArcFineTight").addEventListener("click", () => {
+    sendCommand("turn",15,60);
+});
+document.getElementById("leftBtnArc").addEventListener("click", () => {
+    sendCommand("turn",45,120);
+});
+document.getElementById("leftBtnArcFine").addEventListener("click", () => {
+    sendCommand("turn",15,120);
+});
+
+document.getElementById("rightBtnArcTight").addEventListener("click", () => {
+    sendCommand("turn",-45,60);
+});
+document.getElementById("rightBtnArcFineTight").addEventListener("click", () => {
+    sendCommand("turn",-15,60);
+});
+document.getElementById("rightBtnArc").addEventListener("click", () => {
+    sendCommand("turn",-45,120);
+});
+document.getElementById("rightBtnArcFine").addEventListener("click", () => {
+    sendCommand("turn",-15,120);
+});
