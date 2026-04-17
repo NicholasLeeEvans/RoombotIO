@@ -25,11 +25,6 @@
     grid-column: 2;
 }
 
-#scanBtn {
-    grid-row: 3;
-    grid-column: 3;
-}
-
 #rightBtnFine {
     grid-row: 3;
     grid-column: 4;

@@ -1,5 +1,10 @@
 const ESP_IP = "192.168.10.117";
 
+const es = new EventSource(`http://${ESP_IP}/events`);
+es.addEventListener("range", (e) => { 
+    document.getElementById("range").textContent = e.data; });
+
+
 async function sendCommand(type, param1, param2) {
     let url = `http://${ESP_IP}/action?type=${type}`;
     if(type === "straight") {
@@ -8,8 +13,6 @@ async function sendCommand(type, param1, param2) {
         url += `&angle=${param1}&radius=${param2}`;
     } else if(type === "speed"){
         url += `&rpm=${param1}`;
-    } else if(type === "scan") {
-        // scan needs no params
     } else {
         console.error("Unknown command type:", type);
         return;  // Don't send request
@@ -19,15 +22,10 @@ async function sendCommand(type, param1, param2) {
         const response = await fetch(url);
         const data = await response.json();
         console.log("Response:" , data);
-        document.getElementById("range").textContent = data.distance || "--"; 
     } catch(error) {
         console.error("Error:", error);
     }
 }
-
-document.getElementById("scanBtn").addEventListener("click", () => {
-    sendCommand("scan");
-});
 
 document.getElementById("forwardBtn").addEventListener("click", () => {
     sendCommand("straight",100);

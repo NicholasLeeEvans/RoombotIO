@@ -24,6 +24,7 @@ void setup_wifi(const char* ssid, const char* password) {
 }
 
 AsyncWebServer server(80);
+AsyncEventSource events("/events");
 
 #define IR_RANGE_PIN 36
 
@@ -61,12 +62,6 @@ void setup() {
   delay(10);
 
   setup_wifi(ssid, password);
-
-  server.on("/scan", HTTP_GET, [](AsyncWebServerRequest *request){
-    int distance = my_roombot.scan_once();
-    String response = "{\"distance\":" + String(distance) + "}";
-    request->send(200, "application/json", response);
-  });
 
   server.on("/action", HTTP_GET, [](AsyncWebServerRequest *request){
     if(!request->hasParam("type")){
@@ -108,12 +103,6 @@ void setup() {
       int rpm = request->getParam("set_rpm")->value().toInt();
       cmd.type = Command::SET_RPM;
       cmd.params.set_rpm.rpm = rpm;
-    } else if(type == "scan"){
-      int distance = my_roombot.scan_once();
-
-      String response = "{\"distance\":" + String(distance) + "}";
-      request->send(200, "application/json", response);
-      return;  // Don't call execute_command for SCAN
     } else if(type == "status"){
       cmd.type = Command::STATUS;
       StatusData status = my_roombot.get_status();
@@ -130,6 +119,8 @@ void setup() {
     request->send(200, "application/json", "{\"status\":\"ok\"}");
     
   });
+
+  server.addHandler(&events);
 
   server.begin();
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
@@ -155,6 +146,10 @@ void setup() {
 
 void loop() {
   my_roombot.update_position();
+
+  int distance = my_roombot.scan_once();
+      
+  events.send(String(distance).c_str(), "range");
   delay(50);
 }
 
