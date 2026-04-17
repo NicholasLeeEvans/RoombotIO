@@ -1,7 +1,5 @@
 #include "Roombot.h"
 
-#define PI          3.14159
-#define DEG_TO_RAD  0.01745329
 #define INITIAL_RPM 10
 #define RPM_LIMIT   16
 
@@ -51,10 +49,6 @@ Roombot::Roombot(Stepper *_stepper_left, Stepper *_stepper_right, RangeFinder *_
     delay(10);
 }
 
-void Roombot::init_serialBT(){
-    this->SerialBT.begin("Roombot");
-}
-
 void Roombot::reset_x_y_angle(){
     this->location_x = 0;
     this->location_y = 0;
@@ -71,6 +65,11 @@ void Roombot::reset_x_y_angle(){
     
 }
 
+void Roombot::set_rpms(int rpm_left, int rpm_right){
+    this->stepper_left->set_rpm(rpm_left);
+    this->stepper_right->set_rpm(rpm_right);
+}
+
 void Roombot::set_rpm(int rpm){
   if(rpm > this->rpm_limit){
     rpm = this->rpm_limit;
@@ -78,18 +77,55 @@ void Roombot::set_rpm(int rpm){
     rpm = 1;
   }
     this->rpm = rpm;
-    this->stepper_left->set_rpm(rpm);
-    this->stepper_right->set_rpm(rpm);
+    this->set_rpms(rpm, rpm);
 }
 
 //positive angle is left turn
-void Roombot::turn_angle(float turn_angle){
-    //convert the angle to steps to send to the stepper motors.
-    float wheel_rotations = turn_angle * wheel_base / wheel_diam / 360;
-    int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
+void Roombot::turn_angle(float turn_angle, int turn_radius){
+  float turn_angle_rad = (turn_angle * PI / 180);
+  int turn_sign = (turn_angle_rad > 0) - (turn_angle_rad < 0);
+  int left_radius = turn_radius - turn_sign * (wheel_base/2);
+  int right_radius = turn_radius + turn_sign * (wheel_base/2);
+  
+  float left_arc = abs(turn_angle_rad) * left_radius;
+  float right_arc = abs(turn_angle_rad) * right_radius;
+  
+  float left_wheel_rotations = left_arc / this->wheel_circumference;
+  float right_wheel_rotations = right_arc / this->wheel_circumference;
+  
+  int left_steps_needed = left_wheel_rotations * stepper_left->get_steps_per_rev();
+  int right_steps_needed = right_wheel_rotations * stepper_right->get_steps_per_rev();
+  
+  //set the rpms to the correct ratio for smooth turning.
+  //need to calculate ratio based on left or right... rpm is always positive.
+  // left side, right steps should be denominator,
+  if((left_steps_needed != 0) && (right_steps_needed != 0)){
+    if(turn_angle > 0){ //left turn
+      float ratio = abs(float(left_steps_needed) / right_steps_needed);
+      int ratio_rpm = max(int(ratio * (this->rpm)), 1);
+      this->set_rpms(ratio_rpm, this->rpm);
+    } else if(turn_angle < 0){ //right turn
     
-    this->stepper_left->manual_steps(-steps_needed);
-    this->stepper_right->manual_steps(steps_needed);
+      float ratio = abs(float(right_steps_needed) / left_steps_needed);
+      int ratio_rpm = max(int(ratio * (this->rpm)), 1);
+      this->set_rpms(this->rpm, ratio_rpm);
+    } //no else, shouldnt be 0 turn radius
+  }
+  
+  
+  this->stepper_left->manual_steps(left_steps_needed);
+  this->stepper_right->manual_steps(right_steps_needed);
+}
+
+//positive angle is left turn, do zero radius turn (on the spot)
+void Roombot::turn_angle(float turn_angle){
+  this->set_rpm(this->rpm);
+  //convert the angle to steps to send to the stepper motors.
+  float wheel_rotations = turn_angle * wheel_base / wheel_diam / 360;
+  int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
+  
+  this->stepper_left->manual_steps(-steps_needed);
+  this->stepper_right->manual_steps(steps_needed);
     
 }
 
@@ -101,11 +137,12 @@ void Roombot::spin_once(int direction){
 
 //distance is in mm, should automatically take care of negative numbers
 void Roombot::move_forward(int distance){
-    float wheel_rotations = float(distance) / this->wheel_circumference;
-    int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
-    //Serial.println(steps_needed);
-    this->stepper_left->manual_steps(steps_needed);
-    this->stepper_right->manual_steps(steps_needed);
+  this->set_rpm(this->rpm);  
+  float wheel_rotations = float(distance) / this->wheel_circumference;
+  int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
+  //Serial.println(steps_needed);
+  this->stepper_left->manual_steps(steps_needed);
+  this->stepper_right->manual_steps(steps_needed);
 }
 
 void Roombot::increment_step_count(int _step, int _side){
@@ -128,15 +165,7 @@ int Roombot::scan_once(){
       //estimate the position of the scan, add the offset from center to range finder. other will need to have angle offset
       int range_x = this->location_x + ((this->front_range_offset + calculated_mm_distance) * cos(this->angle * DEG_TO_RAD));
       int range_y = this->location_y + ((this->front_range_offset + calculated_mm_distance) * sin(this->angle * DEG_TO_RAD));
-
-      //SerialBT.print(range_x);
-      //SerialBT.print(",");
-      //SerialBT.println(range_y);
-    } else {
-      SerialBT.print("returned val greater than 300mm: ");
-      //SerialBT.println(calculated_mm_distance);
     }
-    SerialBT.println(calculated_mm_distance);
     //..still return the guess
     return calculated_mm_distance;
 }
@@ -157,12 +186,15 @@ void Roombot::spin_and_scan(){
 }
 
 void Roombot::print_location_angle(){
-    SerialBT.print("(x, y): (");
-    SerialBT.print(int(this->get_position_x()));
-    SerialBT.print(", ");
-    SerialBT.print(int(this->get_position_y()));
-    SerialBT.print("), angle: ");
-    SerialBT.println(int(this->get_angle()));
+  //TODO replace the BT code that was removed
+}
+
+StatusData Roombot::get_status(){
+  return {int(this->get_position_x()),
+          int(this->get_position_y()),
+          int(this->get_angle()),
+          int(this->scan_once())
+  };
 }
 
 void Roombot::update_position(){
@@ -198,56 +230,44 @@ void Roombot::update_position(){
 
 }
 
-void Roombot::checkBTcommands(){
-    if (this->SerialBT.available()) {
-    char message = (SerialBT.read());
-    //Serial.print("received: ");
-    //Serial.println(message);
-    int new_rpm;
-    switch(message){
-      case 'w':
-        //Serial.println("moving forward");
-        this->move_forward(FORWARD_COMMAND_DIST);
-        break;
-      case 's':
-        //Serial.println("moving backward");
-        this->move_forward(-FORWARD_COMMAND_DIST);
-        break;
-      case 'a':
-        //Serial.println("turning left");
-        this->turn_angle(TURN_COMMAND_ANGLE);
-        break;
-      case 'd':
-        //Serial.println("turning right");
-        this->turn_angle(-TURN_COMMAND_ANGLE);
-        break;
-      case 'j':
-        this->set_rpm(this->get_rpm() + 1);
-        break;
-      case 'k':
-        this->set_rpm(this->get_rpm() - 1);
-        break;
-      case 'z':
-        //Serial.println("spin and scan: ");
-        this->spin_and_scan();
-        break;
-      case 'x':
-        //Serial.println("one scan: ");
-        this->scan_once();
-        break;
-      case 'c':
-        //Serial.println("resetting x,y coords and angle: ");
-        this->reset_x_y_angle();
-        break;
-      case 'e':
-        this->print_location_angle();
-        break;
-      default:
-        //Serial.println("unknown message received :(");
-        break;  
-    } //end switch
-  } //end if serialBT available
+void Roombot::execute_command(Command cmd)
+{
+  switch(cmd.type){
+    case Command::STRAIGHT:{
+      this->move_forward(cmd.params.straight.distance);
+      break;
+    }
 
+    case Command::ARC_TURN:{
+      int turn_radius = cmd.params.arc_turn.radius;
+      this->turn_angle((float)cmd.params.arc_turn.angle, turn_radius);
+      break;
+    }
+
+    case Command::SET_RPM:{
+      this->set_rpm(cmd.params.set_rpm.rpm);
+      break;
+    }
+
+    case Command::STOP:
+      break;
+
+    case Command::STATUS:
+      this->print_location_angle();
+      break;
+
+    case Command::SCAN:
+      this->scan_once();
+      break;
+    
+    default:
+      break;
+    
+    
+    
+    
+    
+  }
 }
 
   

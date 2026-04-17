@@ -5,8 +5,12 @@
 #include "Stepper.h"
 #include "RangeFinder.h"
 #include "LinearInterpolator.h"
-#include "BluetoothSerial.h"
 #include "Planner.h"
+#include "Command.h"
+
+struct StatusData {
+    int x, y, angle, range;
+};
 
 class Roombot {
     private:
@@ -19,7 +23,6 @@ class Roombot {
         //RangeFinder *left_range;
         //RangeFinder *right_range;
 
-        BluetoothSerial SerialBT;
 
         LinearInterpolator my_interpolator;
         
@@ -42,8 +45,8 @@ class Roombot {
 
     public:
         Roombot(Stepper *left, Stepper *right, RangeFinder *front);
-        void init_serialBT();
         void reset_x_y_angle();
+        void set_rpms(int rpm_left, int rpm_right);
         void set_rpm(int rpm);
         int get_rpm(){return this->rpm;};
 
@@ -53,6 +56,7 @@ class Roombot {
         int get_wheeldiam(){return this->wheel_diam;};
         void set_wheeldiam(int _wheeldiam){this->wheel_diam = _wheeldiam;};
         
+        void turn_angle(float turn_angle, int turn_radius);
         void turn_angle(float angle);
         void spin_once(int direction);
 
@@ -69,13 +73,15 @@ class Roombot {
         
         void print_location_angle();
 
+        StatusData get_status();
+
         float get_step_to_angle_ratio(){return this->step_to_angle_ratio;};
         
         void update_position();
 
         int interpolate_value(int value){return my_interpolator.calculate_distance(value);};
 
-        void checkBTcommands();
+        void execute_command(Command cmd);
         
 }; 
 

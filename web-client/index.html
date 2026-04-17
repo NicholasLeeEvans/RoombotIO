@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Roombot Control</title>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+    <h1>Roombot WiFi Control</h1>
+
+    <div id="grid">
+        <button id="forwardBtn">Fwd 100mm</button>
+        <button id="forwardBtnFine">Fwd 10mm</button>
+        
+        <button id="leftBtn">Left 45deg</button> 
+        <button id="leftBtnFine">Left 15deg</button> 
+
+        <button id="rightBtnFine">Right 15deg</button>
+        <button id="rightBtn">Right 45deg</button>
+         
+        <button id="backBtnFine">Back 10mm</button>
+        <button id="backBtn">Back 100mm</button>
+
+        <button id="leftBtnArcTight">Left 45deg 60mm radius</button> 
+        <button id="leftBtnArcFineTight">Left 15deg 60mm radius</button> 
+        <button id="leftBtnArc">Left 45deg 120mm radius</button>
+        <button id="leftBtnArcFine">Left 15deg 120mm radius</button>
+
+        <button id="rightBtnArcTight">Right 45deg 60mm radius</button> 
+        <button id="rightBtnArcFineTight">Right 15deg 60mm radius</button> 
+        <button id="rightBtnArc">Right 45deg 120mm radius</button>
+        <button id="rightBtnArcFine">Right 15deg 120mm radius</button>
+
+
+    </div>
+
+    <p>Range: <span id="range">--</span>mm</p>
+
+    <div style="width:50%;"><canvas id="rangeChart"></canvas></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

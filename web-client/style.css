@@ -1,0 +1,94 @@
+#grid {
+    display: grid;
+    height: 200px;
+    grid-template-columns: repeat(5, auto);
+    grid-template-rows: repeat(5, auto);
+}
+
+#forwardBtn {
+    grid-row: 1;
+    grid-column: 3;
+}
+
+#forwardBtnFine {
+    grid-row: 2;
+    grid-column: 3;
+}
+
+#leftBtn {
+    grid-row: 3;
+    grid-column: 1;
+}
+
+#leftBtnFine {
+    grid-row: 3;
+    grid-column: 2;
+}
+
+#rightBtnFine {
+    grid-row: 3;
+    grid-column: 4;
+}
+
+#rightBtn {
+    grid-row: 3;
+    grid-column: 5;
+}
+
+#backBtnFine {
+    grid-row: 4;
+    grid-column: 3;
+}
+
+#backBtn {
+    grid-row: 5;
+    grid-column: 3;
+}
+
+#leftBtnArcTight {
+    grid-row: 2;
+    grid-column: 1;
+}
+
+#leftBtnArcFineTight {
+    grid-row: 2;
+    grid-column: 2;
+}
+
+#leftBtnArc {
+    grid-row: 1;
+    grid-column: 1;
+}
+
+#leftBtnArcFine {
+    grid-row: 1;
+    grid-column: 2;
+}
+
+
+#rightBtnArcTight {
+    grid-row: 2;
+    grid-column: 5;
+}
+
+#rightBtnArcFineTight {
+    grid-row: 2;
+    grid-column: 4;
+}
+
+#rightBtnArc {
+    grid-row: 1;
+    grid-column: 5;
+}
+
+#rightBtnArcFine {
+    grid-row: 1;
+    grid-column: 4;
+}
+
+
+
+
+
+
+
