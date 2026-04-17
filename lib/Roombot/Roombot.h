@@ -46,6 +46,7 @@ class Roombot {
     public:
         Roombot(Stepper *left, Stepper *right, RangeFinder *front);
         void reset_x_y_angle();
+        void set_rpms(int rpm_left, int rpm_right);
         void set_rpm(int rpm);
         int get_rpm(){return this->rpm;};
 
@@ -55,11 +56,9 @@ class Roombot {
         int get_wheeldiam(){return this->wheel_diam;};
         void set_wheeldiam(int _wheeldiam){this->wheel_diam = _wheeldiam;};
         
+        void turn_angle(float turn_angle, int turn_radius);
         void turn_angle(float angle);
         void spin_once(int direction);
-
-        // TODO: Implement arc_turn(angle, radius) 
-        // Requires differential wheel RPM control
 
         void move_forward(int distance);
 
