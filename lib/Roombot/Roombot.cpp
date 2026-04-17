@@ -65,6 +65,11 @@ void Roombot::reset_x_y_angle(){
     
 }
 
+void Roombot::set_rpms(int rpm_left, int rpm_right){
+    this->stepper_left->set_rpm(rpm_left);
+    this->stepper_right->set_rpm(rpm_right);
+}
+
 void Roombot::set_rpm(int rpm){
   if(rpm > this->rpm_limit){
     rpm = this->rpm_limit;
@@ -72,18 +77,55 @@ void Roombot::set_rpm(int rpm){
     rpm = 1;
   }
     this->rpm = rpm;
-    this->stepper_left->set_rpm(rpm);
-    this->stepper_right->set_rpm(rpm);
+    this->set_rpms(rpm, rpm);
 }
 
 //positive angle is left turn
-void Roombot::turn_angle(float turn_angle){
-    //convert the angle to steps to send to the stepper motors.
-    float wheel_rotations = turn_angle * wheel_base / wheel_diam / 360;
-    int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
+void Roombot::turn_angle(float turn_angle, int turn_radius){
+  float turn_angle_rad = (turn_angle * PI / 180);
+  int turn_sign = (turn_angle_rad > 0) - (turn_angle_rad < 0);
+  int left_radius = turn_radius - turn_sign * (wheel_base/2);
+  int right_radius = turn_radius + turn_sign * (wheel_base/2);
+  
+  float left_arc = abs(turn_angle_rad) * left_radius;
+  float right_arc = abs(turn_angle_rad) * right_radius;
+  
+  float left_wheel_rotations = left_arc / this->wheel_circumference;
+  float right_wheel_rotations = right_arc / this->wheel_circumference;
+  
+  int left_steps_needed = left_wheel_rotations * stepper_left->get_steps_per_rev();
+  int right_steps_needed = right_wheel_rotations * stepper_right->get_steps_per_rev();
+  
+  //set the rpms to the correct ratio for smooth turning.
+  //need to calculate ratio based on left or right... rpm is always positive.
+  // left side, right steps should be denominator,
+  if((left_steps_needed != 0) && (right_steps_needed != 0)){
+    if(turn_angle > 0){ //left turn
+      float ratio = abs(float(left_steps_needed) / right_steps_needed);
+      int ratio_rpm = max(int(ratio * (this->rpm)), 1);
+      this->set_rpms(ratio_rpm, this->rpm);
+    } else if(turn_angle < 0){ //right turn
     
-    this->stepper_left->manual_steps(-steps_needed);
-    this->stepper_right->manual_steps(steps_needed);
+      float ratio = abs(float(right_steps_needed) / left_steps_needed);
+      int ratio_rpm = max(int(ratio * (this->rpm)), 1);
+      this->set_rpms(this->rpm, ratio_rpm);
+    } //no else, shouldnt be 0 turn radius
+  }
+  
+  
+  this->stepper_left->manual_steps(left_steps_needed);
+  this->stepper_right->manual_steps(right_steps_needed);
+}
+
+//positive angle is left turn, do zero radius turn (on the spot)
+void Roombot::turn_angle(float turn_angle){
+  this->set_rpm(this->rpm);
+  //convert the angle to steps to send to the stepper motors.
+  float wheel_rotations = turn_angle * wheel_base / wheel_diam / 360;
+  int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
+  
+  this->stepper_left->manual_steps(-steps_needed);
+  this->stepper_right->manual_steps(steps_needed);
     
 }
 
@@ -95,11 +137,12 @@ void Roombot::spin_once(int direction){
 
 //distance is in mm, should automatically take care of negative numbers
 void Roombot::move_forward(int distance){
-    float wheel_rotations = float(distance) / this->wheel_circumference;
-    int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
-    //Serial.println(steps_needed);
-    this->stepper_left->manual_steps(steps_needed);
-    this->stepper_right->manual_steps(steps_needed);
+  this->set_rpm(this->rpm);  
+  float wheel_rotations = float(distance) / this->wheel_circumference;
+  int steps_needed = wheel_rotations * stepper_left->get_steps_per_rev();
+  //Serial.println(steps_needed);
+  this->stepper_left->manual_steps(steps_needed);
+  this->stepper_right->manual_steps(steps_needed);
 }
 
 void Roombot::increment_step_count(int _step, int _side){
@@ -197,24 +240,18 @@ void Roombot::execute_command(Command cmd)
 
     case Command::ARC_TURN:{
       int turn_radius = cmd.params.arc_turn.radius;
-      if(turn_radius == 0){
-        this->turn_angle((float)cmd.params.arc_turn.angle);
-      } else {
-        // TODO nonzero turn radius condition
-      }
+      this->turn_angle((float)cmd.params.arc_turn.angle, turn_radius);
       break;
     }
-      
-    
+
     case Command::SET_RPM:{
       this->set_rpm(cmd.params.set_rpm.rpm);
       break;
     }
-      
-    
+
     case Command::STOP:
       break;
-    
+
     case Command::STATUS:
       this->print_location_angle();
       break;
