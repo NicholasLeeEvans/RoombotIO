@@ -83,6 +83,7 @@ class Roombot {
 
         void execute_command(Command cmd);
         
+        bool is_moving();
 }; 
 
 

@@ -262,12 +262,12 @@ void Roombot::execute_command(Command cmd)
     
     default:
       break;
-    
-    
-    
-    
-    
   }
+
+}
+
+bool Roombot::is_moving(){
+ return ((this->stepper_left->get_steps_remaining() > 0) || (this->stepper_right->get_steps_remaining() > 0));
 }
 
   
