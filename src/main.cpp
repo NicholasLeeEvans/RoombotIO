@@ -166,8 +166,11 @@ void loop() {
   if(now - last_range_update > RANGE_UPDATE_MS){
     if((now - last_move_time < MOVE_STOP_DELAY_MS) || (ALWAYS_SCAN == true)){
       last_range_update = now;
-      int distance = my_roombot.scan_once();
-      events.send(String(distance).c_str(), "range");
+      StatusData status = my_roombot.get_status();
+      events.send(String(status.range).c_str(), "range");
+      String telemetry = "{\"x\":" + String(status.x) + ",\"y\":" + String(status.y) + ",\"angle\":" + 
+                          String(status.angle) + ",\"range\":" + String(status.range) + "}";
+      events.send(String(telemetry).c_str(), "telemetry");
     }
   }
 }
