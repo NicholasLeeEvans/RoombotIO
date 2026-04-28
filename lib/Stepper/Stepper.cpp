@@ -1,8 +1,10 @@
 #include "Stepper.h"
 
+static constexpr float MICROS_PER_MINUTE = 60000000.0f;
+
 Stepper::Stepper(int _steps_per_rev, int _pin1, int _pin2, int _pin3, int _pin4){
       this->Timer_cfg = NULL;
-      int initial_rpm = 10;
+      float initial_rpm = 10;
       this->steps_per_rev = _steps_per_rev;
       this->motor_pin1 = _pin1;
       this->motor_pin2 = _pin2;
@@ -68,7 +70,7 @@ void Stepper::write_pins(int motor_state_1,int motor_state_2,int motor_state_3,i
 
 void Stepper::drive_pins(int _state)
     {
-      switch(_state){
+      switch(_state){ //TODO change this to bool logic, might be faster
         case 0:
             write_pins(LOW, LOW, LOW, LOW);
           break;
@@ -102,9 +104,9 @@ void Stepper::drive_pins(int _state)
       }
     }
 
-void Stepper::set_rpm(int _rpm){
+void Stepper::set_rpm(float _rpm){
     this->speed_rpm = _rpm;
-    this->step_interval_us = (60L * 1000L * 1000L) / steps_per_rev / speed_rpm;
+    this->step_interval_us = uint32_t(MICROS_PER_MINUTE / (steps_per_rev * speed_rpm));
 
     if(Timer_cfg != NULL){
       //Serial.print("setting alarm write to: ");

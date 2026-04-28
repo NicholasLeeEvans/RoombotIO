@@ -106,7 +106,7 @@ void setup() {
         request->send(400, "application/json", "{\"error\":\"missing rpm\"}");
        return;
       }
-      int rpm = request->getParam("set_rpm")->value().toInt();
+      float rpm = request->getParam("set_rpm")->value().toFloat();
       cmd.type = Command::SET_RPM;
       cmd.params.set_rpm.rpm = rpm;
     } else if(type == "status"){
