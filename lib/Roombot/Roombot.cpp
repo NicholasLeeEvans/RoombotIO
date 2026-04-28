@@ -15,7 +15,7 @@
 Roombot::Roombot(Stepper *_stepper_left, Stepper *_stepper_right, RangeFinder *_front_range){
     
     
-    int initial_rpm = INITIAL_RPM; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
+    float initial_rpm = INITIAL_RPM; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
     this->rpm_limit = RPM_LIMIT;
     // set up initial location
     this->reset_x_y_angle();
@@ -65,12 +65,12 @@ void Roombot::reset_x_y_angle(){
     
 }
 
-void Roombot::set_rpms(int rpm_left, int rpm_right){
+void Roombot::set_rpms(float rpm_left, float rpm_right){
     this->stepper_left->set_rpm(rpm_left);
     this->stepper_right->set_rpm(rpm_right);
 }
 
-void Roombot::set_rpm(int rpm){
+void Roombot::set_rpm(float rpm){
   if(rpm > this->rpm_limit){
     rpm = this->rpm_limit;
   } else if(rpm < 1){
@@ -102,12 +102,12 @@ void Roombot::turn_angle(float turn_angle, int turn_radius){
   if((left_steps_needed != 0) && (right_steps_needed != 0)){
     if(turn_angle > 0){ //left turn
       float ratio = abs(float(left_steps_needed) / right_steps_needed);
-      int ratio_rpm = max(int(ratio * (this->rpm)), 1);
+      float ratio_rpm = max(float(ratio * (this->rpm)), 1.0f);
       this->set_rpms(ratio_rpm, this->rpm);
     } else if(turn_angle < 0){ //right turn
     
       float ratio = abs(float(right_steps_needed) / left_steps_needed);
-      int ratio_rpm = max(int(ratio * (this->rpm)), 1);
+      float ratio_rpm = max(float(ratio * (this->rpm)), 1.0f);
       this->set_rpms(this->rpm, ratio_rpm);
     } //no else, shouldnt be 0 turn radius
   }
@@ -175,7 +175,7 @@ void Roombot::spin_and_scan(){
     //need a variable to store the values somewhere...
     spin_once(1);
     delay(5);
-    int old_rpm = this->get_rpm();
+    float old_rpm = this->get_rpm();
     this->set_rpm(5);
     while((this->stepper_left->get_steps_remaining() > 0) || (this->stepper_right->get_steps_remaining() > 0)){
         this->update_position();

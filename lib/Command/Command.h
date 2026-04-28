@@ -8,7 +8,7 @@ struct Command {
     union {
         struct {int distance; } straight;
         struct {int angle; int radius; } arc_turn;
-        struct {int rpm; } set_rpm;
+        struct {float rpm; } set_rpm;
 
     } params;
 };
