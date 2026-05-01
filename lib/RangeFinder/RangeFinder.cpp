@@ -3,6 +3,7 @@
 #define ISR_TIMER_DIVIDER   80
 
 #define STORED_READS    7
+#define MEDIAN_ITR      3
 
 RangeFinder::RangeFinder(int pin_number){
     this->pin_number = pin_number;
@@ -47,22 +48,25 @@ void RangeFinder::take_multiple_readings(int count){
 
 int RangeFinder::get_range_value(){
 
-    int min = stored_vals[0];
-    int max = stored_vals[0];
-    int sum = 0;
-    
-    for(int itr = 0; itr < STORED_READS; itr++)
-    {
-        int check_value = stored_vals[itr];
-        if(check_value < min)
-            min = check_value;
-        if(check_value > max)
-            max = check_value;
-
-        sum += check_value;
+    int read_values[STORED_READS];
+    noInterrupts();
+    for(int i = 0; i < STORED_READS; i++) {
+        read_values[i] = stored_vals[i];
     }
-    sum -= (min + max);
+    interrupts();
+    for(int itr = 1; itr < STORED_READS; itr++)
+    {
+        for(int itr2 = itr; itr2 > 0; itr2--){
+            int check_value = read_values[itr2];
+            int comp_value = read_values[itr2 - 1];
+            if(comp_value < check_value){
+                break;
+            }
+            read_values[itr2] = comp_value;
+            read_values[itr2 - 1] = check_value;
+        }
+    }
+    return read_values[MEDIAN_ITR];
 
-    return sum / (STORED_READS - 2);
     
 }
