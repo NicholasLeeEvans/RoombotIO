@@ -16,8 +16,8 @@ class Roombot {
     private:
         Stepper *stepper_left;
         Stepper *stepper_right;
-        float rpm; 
-        float rpm_limit;
+        int rpm; //probably change this to float later for more precision, might be pointless though
+        int rpm_limit;
         RangeFinder *front_range;
         int front_range_offset;
         //RangeFinder *left_range;
@@ -46,9 +46,9 @@ class Roombot {
     public:
         Roombot(Stepper *left, Stepper *right, RangeFinder *front);
         void reset_x_y_angle();
-        void set_rpms(float rpm_left, float rpm_right);
-        void set_rpm(float rpm);
-        float get_rpm(){return this->rpm;};
+        void set_rpms(int rpm_left, int rpm_right);
+        void set_rpm(int rpm);
+        int get_rpm(){return this->rpm;};
 
         int get_wheelbase(){return this->wheel_base;};
         void set_wheelbase(int _wheelbase){this->wheel_base = _wheelbase;};
@@ -83,7 +83,6 @@ class Roombot {
 
         void execute_command(Command cmd);
         
-        bool is_moving();
 }; 
 
 

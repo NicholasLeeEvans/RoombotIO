@@ -13,6 +13,7 @@ public:
 
 private:
     int pin_number;
+    int number_of_reads;
     volatile int stored_vals[7];
     hw_timer_t *Timer_cfg;
     volatile int iterator;
