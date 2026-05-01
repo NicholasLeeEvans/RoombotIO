@@ -55,8 +55,11 @@ void IRAM_ATTR Timer_ISR_RangeFinder()
 unsigned long last_position_update;
 #define POSITION_UPDATE_MS 50
 
+#define ALWAYS_SCAN false
 unsigned long last_range_update;
 #define RANGE_UPDATE_MS 100
+unsigned long last_move_time;
+#define MOVE_STOP_DELAY_MS 500
 
 void setup() {
 
@@ -103,7 +106,7 @@ void setup() {
         request->send(400, "application/json", "{\"error\":\"missing rpm\"}");
        return;
       }
-      int rpm = request->getParam("set_rpm")->value().toInt();
+      float rpm = request->getParam("set_rpm")->value().toFloat();
       cmd.type = Command::SET_RPM;
       cmd.params.set_rpm.rpm = rpm;
     } else if(type == "status"){
@@ -143,9 +146,10 @@ void setup() {
   
   Serial.println("entering loop: ");
 
-  last_position_update = millis();
-  last_range_update = millis();
-  
+  unsigned long now = millis();
+  last_position_update = now;
+  last_range_update = now; 
+  last_move_time = now; 
 }
 
 
@@ -155,11 +159,19 @@ void loop() {
     last_position_update = now;
     my_roombot.update_position();
   }
-  
+ 
+  if(my_roombot.is_moving()){
+    last_move_time = now;
+  }
   if(now - last_range_update > RANGE_UPDATE_MS){
-    last_range_update = now;
-    int distance = my_roombot.scan_once();
-    events.send(String(distance).c_str(), "range");
+    if((now - last_move_time < MOVE_STOP_DELAY_MS) || (ALWAYS_SCAN == true)){
+      last_range_update = now;
+      StatusData status = my_roombot.get_status();
+      events.send(String(status.range).c_str(), "range");
+      String telemetry = "{\"x\":" + String(status.x) + ",\"y\":" + String(status.y) + ",\"angle\":" + 
+                          String(status.angle) + ",\"range\":" + String(status.range) + "}";
+      events.send(String(telemetry).c_str(), "telemetry");
+    }
   }
 }
 
