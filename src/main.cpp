@@ -27,6 +27,7 @@ AsyncWebServer server(80);
 AsyncEventSource events("/events");
 
 #define IR_RANGE_PIN 36
+volatile bool ir_sample_due = false;
 
 RangeFinder range_front(IR_RANGE_PIN);
 
@@ -49,7 +50,7 @@ void IRAM_ATTR Timer_ISR_Right()
 
 void IRAM_ATTR Timer_ISR_RangeFinder()
 {
-  range_front.take_multiple_readings(7);
+  ir_sample_due = true;
 }
 
 unsigned long last_position_update;
@@ -154,6 +155,11 @@ void setup() {
 
 
 void loop() {
+  if(ir_sample_due){
+    ir_sample_due = false;
+    range_front.sample();
+  }
+
   unsigned long now = millis();
   if(now - last_position_update > POSITION_UPDATE_MS){
     last_position_update = now;
@@ -163,6 +169,7 @@ void loop() {
   if(my_roombot.is_moving()){
     last_move_time = now;
   }
+  
   if(now - last_range_update > RANGE_UPDATE_MS){
     if((now - last_move_time < MOVE_STOP_DELAY_MS) || (ALWAYS_SCAN == true)){
       last_range_update = now;
