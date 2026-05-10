@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<robot name="roombot">
+
+    <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+
+    <material name="red">
+        <color rgba="0.8 0 0 1"/>
+    </material>
+
+    <material name="green">
+        <color rgba="0 0.8 0 1"/>
+    </material>
+
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <link name="base_footprint"/>
+    <link name="base">
+        <visual>
+            <geometry>
+                <cylinder length="0.02" radius="0.1"/>
+            </geometry>
+        <material name="red"/>
+        </visual>
+    </link>
+
+    <joint name="footprint_to_base" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base"/>
+        <origin xyz="0 0 0.05" rpy="0 0 0"/>
+    </joint>
+
+    <link name="left_wheel">
+        <visual>
+            <geometry>
+                <cylinder length="0.01" radius="0.05"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+    </link>
+
+    <link name="right_wheel">
+        <visual>
+            <geometry>
+                <cylinder length="0.01" radius="0.05"/>
+            </geometry>
+            <material name="green"/>
+        </visual>
+    </link>
+
+    <joint name="base_to_left_wheel" type="fixed">
+        <parent link="base"/>
+        <child link="left_wheel"/>
+        <origin xyz="0 0.1 0" rpy="-1.5707 0 0"/>
+    </joint>
+    
+    <joint name="base_to_right_wheel" type="fixed">
+        <parent link="base"/>
+        <child link="right_wheel"/>
+        <origin xyz="0 -0.1 0" rpy="1.5707 0 0"/>
+    </joint>
+
+    <link name="sensor">
+        <visual>
+            <geometry>
+                <box size="0.05 0.01 0.01"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+    </link>
+
+    <joint name="base_to_sensor" type="fixed">
+        <parent link="base"/>
+        <child link="sensor"/>
+        <origin xyz="0.1 0 0.01" rpy="0 0 0"/>
+    </joint>
+
+</robot>
