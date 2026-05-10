@@ -4,3 +4,9 @@
 .vscode/launch.json
 .vscode/ipch
 docs/
+
+settings.json
+
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
