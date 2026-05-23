@@ -1,4 +1,6 @@
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -11,9 +13,11 @@ def generate_launch_description():
     urdf_content = open(urdf_path).read()
 
     return LaunchDescription([
+        DeclareLaunchArgument('roombot_ip', default_value='192.168.10.117'),
         Node(
             package='roombot_bringup',
-            executable='circle_odom',
+            executable='roombot_bridge',
+            parameters=[{'roombot_ip': LaunchConfiguration('roombot_ip')}]
         ),
         Node(
             package='robot_state_publisher',
