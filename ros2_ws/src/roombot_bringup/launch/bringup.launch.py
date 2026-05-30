@@ -20,6 +20,10 @@ def generate_launch_description():
             parameters=[{'roombot_ip': LaunchConfiguration('roombot_ip')}]
         ),
         Node(
+            package='roombot_bringup',
+            executable='breadcrumb_node',
+        ),
+        Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
             parameters=[{'robot_description': urdf_content}],

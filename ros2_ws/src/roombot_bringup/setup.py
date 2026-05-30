@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'circle_odom = roombot_bringup.circle_odom:main',
             'roombot_bridge = roombot_bringup.roombot_bridge:main',
+            'breadcrumb_node = roombot_bringup.breadcrumb_node:main',
         ],
     },
 )
