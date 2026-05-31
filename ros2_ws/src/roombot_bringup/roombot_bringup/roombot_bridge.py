@@ -10,6 +10,8 @@ from rclpy.node import Node
 from tf2_ros import TransformBroadcaster
 from tf_transformations import quaternion_from_euler
 
+from geometry_msgs.msg import PoseStamped
+
 
 class RoombotBridge(Node):
     def __init__(self):
@@ -19,6 +21,8 @@ class RoombotBridge(Node):
         self._url = f'http://{ip}/events'
         self._broadcaster = TransformBroadcaster(self)
         threading.Thread(target=self._sse_loop, daemon=True).start()
+
+        self._pose_publisher = self.create_publisher(PoseStamped, "/roombot/pose", 10)
 
     def _sse_loop(self):
         while rclpy.ok():
@@ -57,6 +61,15 @@ class RoombotBridge(Node):
         t.transform.rotation.z = q[2]
         t.transform.rotation.w = q[3]
         self._broadcaster.sendTransform(t)
+
+        pose = PoseStamped()
+        pose.header.frame_id = 'odom'
+        pose.header.stamp = self.get_clock().now().to_msg()
+        pose.pose.position.x = t.transform.translation.x
+        pose.pose.position.y = t.transform.translation.y
+        pose.pose.position.z = t.transform.translation.z
+        pose.pose.orientation = t.transform.rotation
+        self._pose_publisher.publish(pose)
 
 
 def main():
