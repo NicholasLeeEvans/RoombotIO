@@ -1,9 +1,12 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 import os
 from ament_index_python.packages import get_package_share_directory
+
+web_client_path = os.path.join(get_package_share_directory('roombot_bringup'), 'web-client')
+
 
 def generate_launch_description():
     urdf_path = os.path.join(
@@ -31,5 +34,10 @@ def generate_launch_description():
         Node(
             package='foxglove_bridge',
             executable='foxglove_bridge',
+        ),
+        ExecuteProcess(
+            cmd=['python3', '-m', 'http.server', '8000'],
+            cwd=web_client_path,
+            output='screen' 
         ),
     ])
