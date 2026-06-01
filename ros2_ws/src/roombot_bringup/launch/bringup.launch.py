@@ -38,16 +38,6 @@ def generate_launch_description():
         ExecuteProcess(
             cmd=['python3', '-m', 'http.server', '8000'],
             cwd=web_client_path,
-            output='screen'
-        ),
-        # joy_node reads the gamepad hardware and publishes sensor_msgs/Joy on /joy
-        Node(
-            package='joy',
-            executable='joy_node',
-        ),
-        Node(
-            package='roombot_bringup',
-            executable='ps4_teleop',
-            parameters=[{'roombot_ip': LaunchConfiguration('roombot_ip')}]
+            output='screen' 
         ),
     ])
