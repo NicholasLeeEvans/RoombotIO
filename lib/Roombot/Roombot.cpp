@@ -6,13 +6,14 @@
 #define WHEELBASE       120
 #define WHEEL_DIAMETER  62
 
-#define FRONT_RANGEFINDER_OFFSET  70
-#define MAX_RANGEFINDER_SCAN_DIST 300
-
 #define FORWARD_COMMAND_DIST  100
 #define TURN_COMMAND_ANGLE    45
 
-Roombot::Roombot(Stepper *_stepper_left, Stepper *_stepper_right, RangeFinder *_front_range){
+Roombot::Roombot(Stepper *_stepper_left,
+                  Stepper *_stepper_right,
+                  RangeFinder *_front_range,
+                  RangeFinder *_left_range,
+                  RangeFinder *_right_range){
     
     
     float initial_rpm = INITIAL_RPM; // probably set the max rpm to 16, was getting only one working at 18rpm, and none at 20rpm
@@ -39,7 +40,8 @@ Roombot::Roombot(Stepper *_stepper_left, Stepper *_stepper_right, RangeFinder *_
 
     //set up rangefinder
     this->front_range = _front_range;
-    this->front_range_offset = FRONT_RANGEFINDER_OFFSET;
+    this->left_range = _left_range;
+    this->right_range = _right_range;
 
     this->my_interpolator = LinearInterpolator();
 
@@ -153,21 +155,17 @@ void Roombot::increment_step_count(int _step, int _side){
     }
 }
 
-int Roombot::scan_once(){
+std::array<int,3> Roombot::scan_once(){
     //probably need to ignore anything too large right now...
-    int scan_value = this->front_range->get_range_value();
-    int calculated_mm_distance = this->my_interpolator.calculate_distance(scan_value);
+    int front_scan_value = this->front_range->get_range_value();
+    int left_scan_value = this->left_range->get_range_value();
+    int right_scan_value = this->right_range->get_range_value();
+    int front_mm = this->my_interpolator.calculate_distance(front_scan_value);
+    int left_mm = this->my_interpolator.calculate_distance(left_scan_value);
+    int right_mm = this->my_interpolator.calculate_distance(right_scan_value);
 
-
-    //ignore big values as they are pretty sketchy...
-
-    if(calculated_mm_distance < MAX_RANGEFINDER_SCAN_DIST){
-      //estimate the position of the scan, add the offset from center to range finder. other will need to have angle offset
-      int range_x = this->location_x + ((this->front_range_offset + calculated_mm_distance) * cos(this->angle * DEG_TO_RAD));
-      int range_y = this->location_y + ((this->front_range_offset + calculated_mm_distance) * sin(this->angle * DEG_TO_RAD));
-    }
-    //..still return the guess
-    return calculated_mm_distance;
+    std::array<int,3> ranges_mm = {front_mm, left_mm, right_mm}; 
+    return ranges_mm;
 }
 
 void Roombot::spin_and_scan(){
@@ -190,11 +188,14 @@ void Roombot::print_location_angle(){
 }
 
 StatusData Roombot::get_status(){
+  std::array<int, 3> ranges_mm = this->scan_once();
   return {int(this->get_position_x()),
           int(this->get_position_y()),
-          int(this->get_angle()),
-          int(this->scan_once())
-  };
+          int(lroundf(this->get_angle() * 1000)), // angle in millidegrees for int precision
+          ranges_mm[0],
+          ranges_mm[1],
+          ranges_mm[2]
+        };
 }
 
 void Roombot::update_position(){

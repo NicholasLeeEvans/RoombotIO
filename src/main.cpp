@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <array>
 
 #include "Stepper.h"
 #include "RangeFinder.h"
@@ -26,16 +27,21 @@ void setup_wifi(const char* ssid, const char* password) {
 AsyncWebServer server(80);
 AsyncEventSource events("/events");
 
-#define IR_RANGE_PIN 36
+#define FRONT_RANGE_PIN 36
+#define LEFT_RANGE_PIN 34
+#define RIGHT_RANGE_PIN 39
+
 volatile bool ir_sample_due = false;
 
-RangeFinder range_front(IR_RANGE_PIN);
+RangeFinder range_front(FRONT_RANGE_PIN);
+RangeFinder range_left(LEFT_RANGE_PIN);
+RangeFinder range_right(RIGHT_RANGE_PIN);
 
 //these values below should be set up for +ve directions being going forward for both
 Stepper stepper_left(4096,27,14,12,13);
 Stepper stepper_right(4096,26,25,33,32);
 
-Roombot my_roombot(&stepper_left, &stepper_right, &range_front);
+Roombot my_roombot(&stepper_left, &stepper_right, &range_front, &range_left, &range_right);
 
 //would like to remove these and put in the class somehow... maybe reference the timer with a 1 and 2 in the roombot class and do it there?
 void IRAM_ATTR Timer_ISR_Left()
@@ -113,8 +119,13 @@ void setup() {
     } else if(type == "status"){
       cmd.type = Command::STATUS;
       StatusData status = my_roombot.get_status();
-      String response = "{\"x\":" + String(status.x) + ",\"y\":" + String(status.y) 
-                      + ",\"angle\":" + String(status.angle) + ",\"range\":" + String(status.range) + "}";
+      String response = "{\"x\":" + String(status.x) +
+                        ",\"y\":" + String(status.y) + 
+                        ",\"angle\":" + String(status.angle) +
+                        ",\"front_range\":" + String(status.front_range) +
+                        ",\"left_range\":" + String(status.left_range) +
+                        ",\"right_range\":" + String(status.right_range) +
+                        "}";
       request->send(200, "application/json", response);
       return;  // Don't call execute_command for STATUS
     } else {
@@ -158,6 +169,8 @@ void loop() {
   if(ir_sample_due){
     ir_sample_due = false;
     range_front.sample();
+    range_left.sample();
+    range_right.sample();
   }
 
   unsigned long now = millis();
@@ -174,9 +187,16 @@ void loop() {
     if((now - last_move_time < MOVE_STOP_DELAY_MS) || (ALWAYS_SCAN == true)){
       last_range_update = now;
       StatusData status = my_roombot.get_status();
-      events.send(String(status.range).c_str(), "range");
-      String telemetry = "{\"x\":" + String(status.x) + ",\"y\":" + String(status.y) + ",\"angle\":" + 
-                          String(status.angle) + ",\"range\":" + String(status.range) + "}";
+      events.send(String(status.front_range).c_str(), "front_range");
+      events.send(String(status.left_range).c_str(), "left_range");
+      events.send(String(status.right_range).c_str(), "right_range");
+      String telemetry = "{\"x\":" + String(status.x) + 
+                         ",\"y\":" + String(status.y) + 
+                         ",\"angle\":" + String(status.angle) + 
+                         ",\"front_range\":" + String(status.front_range) + 
+                         ",\"left_range\":" + String(status.left_range) + 
+                         ",\"right_range\":" + String(status.right_range) + 
+                         "}";
       events.send(String(telemetry).c_str(), "telemetry");
     }
   }
