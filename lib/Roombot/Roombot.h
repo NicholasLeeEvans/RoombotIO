@@ -7,9 +7,12 @@
 #include "LinearInterpolator.h"
 #include "Planner.h"
 #include "Command.h"
+#include <array>
 
 struct StatusData {
-    int x, y, angle, range;
+    int x, y, 
+        angle, //in millidegrees 
+        front_range, left_range, right_range;
 };
 
 class Roombot {
@@ -19,10 +22,8 @@ class Roombot {
         float rpm; 
         float rpm_limit;
         RangeFinder *front_range;
-        int front_range_offset;
-        //RangeFinder *left_range;
-        //RangeFinder *right_range;
-
+        RangeFinder *left_range;
+        RangeFinder *right_range;
 
         LinearInterpolator my_interpolator;
         
@@ -44,7 +45,11 @@ class Roombot {
         float step_to_angle_ratio;
 
     public:
-        Roombot(Stepper *left, Stepper *right, RangeFinder *front);
+        Roombot(Stepper *left,
+                Stepper *right,
+                RangeFinder *front,
+                RangeFinder *left_range,
+                RangeFinder *right_range);
         void reset_x_y_angle();
         void set_rpms(float rpm_left, float rpm_right);
         void set_rpm(float rpm);
@@ -64,7 +69,7 @@ class Roombot {
 
         void increment_step_count(int _step, int _side);
 
-        int scan_once();
+        std::array<int,3> scan_once();
         void spin_and_scan();
 
         float get_angle(){return this->angle;};
